@@ -543,11 +543,13 @@ class TreeStyle(object):
 
         self.title = FaceContainer()
         self.tree_width = 180
+
+        self.hgt_links = []
+
         # PRIVATE values
         self._scale = None
 
         self.__closed__ = 1
-
 
     def __setattr__(self, attr, val):
         if hasattr(self, attr) or not getattr(self, "__closed__", 0):
@@ -557,6 +559,13 @@ class TreeStyle(object):
                 raise ValueError("[%s] wrong type" %attr)
         else:
             raise ValueError("[%s] option is not supported" %attr)
+            
+    def add_hgt_links(self, hgt_links, a_mode=0, b_mode=0, bg="black", lw=1, opacity=1,
+                      text=None, text_opacity=1, fsize=8, fcolor="black", ftype="Arial"):
+        for node_pair in hgt_links:
+            self.hgt_links.append([node_pair[0], node_pair[1], a_mode, b_mode,
+                                   bg, lw, opacity, text, text_opacity, fsize, fcolor, ftype])
+
 
 class _FaceAreas(object):
     def __init__(self):

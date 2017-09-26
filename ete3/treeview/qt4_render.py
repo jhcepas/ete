@@ -125,6 +125,44 @@ class _EmptyItem(QtGui.QGraphicsItem):
     def paint(self, *args, **kargs):
         return
 
+class _TextLabel(QtGui.QGraphicsItem):
+    def __init__(self, frame, path, text, text_opacity, font, fcolor, fsize):
+        QtGui.QGraphicsItem.__init__(self)
+        self.path = path
+        self.text = text
+        self.font = font
+        self.fcolor = fcolor
+        self.fsize = fsize
+        self.setParentItem(frame)
+        self.setOpacity(text_opacity)
+
+    def boundingRect(self):
+        return QtCore.QRectF(0, 0, 0, 0)
+
+    def paint(self, painter, option, widget):
+        length = self.path.length()
+	pen = QtGui.QPen(QtGui.QColor(self.fcolor))
+        painter.setPen(pen)
+        font = QtGui.QFont(self.font, self.fsize)
+        painter.setFont(font)
+        fm = QtGui.QFontMetrics(font)
+        text_width = fm.width(self.text)
+
+        # approx center text in path
+        current_length = (length / 2) - (text_width / 2)
+        for letter in self.text:
+            perc = self.path.percentAtLength(current_length)
+            point = QtCore.QPointF(self.path.pointAtPercent(perc))
+            angle = self.path.angleAtPercent(perc)
+
+            current_length += fm.width(letter)
+
+            painter.save()
+            painter.translate(point)
+            painter.rotate(-angle)
+            painter.drawText(QtCore.QPoint(0, 0), letter)
+            painter.restore()
+
 class _TreeItem(QtGui.QGraphicsRectItem):
     def __init__(self, parent=None):
         QtGui.QGraphicsRectItem.__init__(self)
@@ -355,6 +393,8 @@ def render(root_node, img, hide_root=False):
     add_legend(img, mainRect, frame)
     add_title(img, mainRect, frame)
     add_scale(img, mainRect, frame)
+    if img.hgt_links:
+        render_links(n2i, img, tree_radius, frame)
     frame.setRect(mainRect)
 
     # Draws a border around the tree
@@ -364,6 +404,106 @@ def render(root_node, img, hide_root=False):
         frame.setPen(QtGui.QPen(QtGui.QColor("black")))
 
     return frame, n2i, n2f
+
+def render_links(n2i, img, tree_radius, frame):
+    cx, cy = tree_radius, tree_radius
+    node_coords = dict()
+    for k, v in n2i.items():
+        node_ball = v.mapped_items[0]
+        r = node_ball.boundingRect()
+        rect = node_ball.mapToScene(r).boundingRect()
+        node_coords[k] = dict()
+        node_coords[k]['cartesian_coords'] = rect.x(), rect.y()
+        node_coords[k]['polar_coords'] = cartesian_to_polar(rect.x(), rect.y(), cx, cy)
+
+    for a, b, a_mode, b_mode, bg, lw, opacity, text, text_opacity, fsize, fcolor, ftype in img.hgt_links:
+        if node_coords[a]['polar_coords'][0] > node_coords[b]['polar_coords'][0]:
+            a, b = b, a
+
+        if b in set(a.get_ancestors()):
+            b_mode = 0
+        elif a in set(b.get_ancestors()):
+            a_mode = 0
+
+        if not a.is_leaf() and a_mode == 1:
+            a_max_rad = 0
+            a_min_rot = 360
+            a_max_rot = 0
+            for lf in a.iter_leaves():
+                a_max_rad = max(a_max_rad, node_coords[lf]['polar_coords'][1])
+                a_min_rot = min(a_min_rot, node_coords[lf]['polar_coords'][0])
+                a_max_rot = max(a_min_rot, node_coords[lf]['polar_coords'][0])
+            a1x, a1y = get_absolute_coords(a_max_rad, a_min_rot, cx, cy)
+            a2x, a2y = get_absolute_coords(a_max_rad, a_max_rot, cx, cy)
+            acx, acy = get_absolute_coords(a_max_rad, a_min_rot + (a_max_rot - a_min_rot) / 2, cx, cy)
+        else:
+            a1x, a1y = node_coords[a]['cartesian_coords']
+            a2x, a2y = a1x, a1y
+            acx, acy = a1x, a1y
+
+        if not b.is_leaf() and b_mode == 1:
+            b_max_rad = 0
+            b_min_rot = 360
+            b_max_rot = 0
+            for lf in b.iter_leaves():
+                b_max_rad = max(b_max_rad, node_coords[lf]['polar_coords'][1])
+                b_min_rot = min(b_min_rot, node_coords[lf]['polar_coords'][0])
+                b_max_rot = max(b_max_rot, node_coords[lf]['polar_coords'][0])
+            b1x, b1y = get_absolute_coords(b_max_rad, b_min_rot, cx, cy)
+            b2x, b2y = get_absolute_coords(b_max_rad, b_max_rot, cx, cy)
+            bcx, bcy = get_absolute_coords(b_max_rad, b_min_rot + (b_max_rot - b_min_rot) / 2, cx, cy)
+        else:
+            b1x, b1y = node_coords[b]['cartesian_coords']
+            b2x, b2y = b1x, b1y
+            bcx, bcy = b1x, b1y
+
+        path = QtGui.QPainterPath()
+        path.moveTo(a2x, a2y)
+        path.quadTo(cx, cy, b1x, b1y)
+
+        if b1x != b2x or b1y != b2y:
+            path.arcTo(cx - b_max_rad, cy - b_max_rad,
+                       b_max_rad * 2, b_max_rad * 2,
+                       -b_min_rot, -(b_max_rot - b_min_rot))
+            path.quadTo(cx, cy, a1x, a1y)
+            # pp.setPen(get_qpen(bg, 0, 0, Qt.FlatCap))
+            # pp.setBrush(get_qbrush(bg))
+        else:
+            path.quadTo(cx, cy, a1x, a1y)
+
+        if a1x != a2x or a1y != a2y:
+            path.arcTo(cx - a_max_rad, cy - a_max_rad,
+                       a_max_rad * 2, a_max_rad * 2,
+                       -a_min_rot, -(a_max_rot - a_min_rot))
+            # pp.setPen(get_qpen(bg, 0, 0, Qt.FlatCap))
+            # pp.setBrush(get_qbrush(bg))
+
+        link = QtGui.QGraphicsPathItem(path)
+        link.setPen(QtGui.QPen(QtGui.QColor(bg), lw))
+        link.setOpacity(opacity)
+
+        link.setParentItem(frame)
+
+        if bcx < acx:
+            acx, acy, bcx, bcy = bcx, bcy, acx, acy
+        
+        if text:
+            textpath = QtGui.QPainterPath()
+            textpath.moveTo(acx, acy)
+            textpath.quadTo(cx, cy, bcx, bcy)
+            link_text_label = _TextLabel(frame, textpath, text, text_opacity, ftype, fcolor, fsize)
+
+def cartesian_to_polar(x, y, cx, cy):
+    x -= cx
+    y -= cy
+    theta = math.degrees(math.atan2(y, x))
+    radius = math.hypot(x, y)
+    return abs(theta), radius
+
+def get_absolute_coords(radius, theta, cx, cy):
+    x = radius * math.cos(math.radians(theta)) + cx
+    y = radius * math.sin(math.radians(theta)) + cy
+    return x, y
 
 def adjust_faces_to_tranformations(img, mainRect, n2i, n2f, tree_layers):
     if img.mode == "c":
