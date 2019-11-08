@@ -77,6 +77,8 @@ class CogSelector(CogSelectorTask):
         self.cogs = None
 
     def finish(self):
+        def cog_size_comparator_key(c):
+            return (len(c), _min([sp2cogs[_sp] for _sp, _seq in c]))
         def sort_cogs_by_size(c1, c2):
             '''
             sort cogs by descending size. If two cogs are the same size, sort
@@ -96,6 +98,8 @@ class CogSelector(CogSelectorTask):
             else:
                 return r
 
+        def cog_sp_comparator_key(c):
+            return (_min([sp2cogs[_sp] for _sp, _seq in c]), sorted(c))
         def sort_cogs_by_sp_repr(c1, c2):
             c1_repr = _min([sp2cogs[_sp] for _sp, _seq in c1])
             c2_repr = _min([sp2cogs[_sp] for _sp, _seq in c2])
@@ -145,7 +149,7 @@ class CogSelector(CogSelectorTask):
             log.log(28, "% 20s  found in single copy in  % 6d (%0.1f%%) COGs " %(sp, ncogs, 100 * ncogs/float(cognumber)))
 
         valid_cogs = sorted([sing for sing in all_singletons if len(sing) >= min_species],
-                            sort_cogs_by_size)
+                            key=cog_size_comparator_key)
 
         log.log(28, "Largest cog size: %s. Smallest cog size: %s" %(
                 largest_cog, smallest_cog))

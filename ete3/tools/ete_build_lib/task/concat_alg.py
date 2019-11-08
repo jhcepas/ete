@@ -244,6 +244,8 @@ def get_concatenated_alg(alg_filenames, models=None,
     log.info("%d out of %d will be kept (missing factor threshold=%g, %d species forced to kept)" %\
                  (len(valid_species), len(sp2alg), kill_thr, len(keep_species)))
 
+    def single_algs_comparator_key(alg):
+        return (alg.matrix, sorted(alg.id2name.values()))
     def sort_single_algs(alg1, alg2):
         r = cmp(alg1.matrix, alg2.matrix)
         if r == 0:
@@ -252,7 +254,7 @@ def get_concatenated_alg(alg_filenames, models=None,
         else:
             return r
 
-    sorted_algs = sorted(alg_objects, sort_single_algs)
+    sorted_algs = sorted(alg_objects, key=single_algs_comparator_key)
     concat_alg_lengths = [alg.seqlength for alg in sorted_algs]
     model2win = {}
     model2size = {}
