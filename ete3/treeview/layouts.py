@@ -47,7 +47,8 @@ def basic(node):
     if node.is_leaf():
         #node.img_style["size"]=1
         #node.img_style["shape"] = "circle"
-        faces.add_face_to_node(faces.AttrFace("name","Arial",10,"#4f8f0f",None), node, 0 )
+        faces.add_face_to_node(faces.AttrFace("name", fstyle="Arial", fsize=10,
+                                              fgcolor="#4f8f0f", penwidth=None), node, 0 )
 
 def phylogeny(node):
     leaf_color = "#000000"
@@ -73,7 +74,8 @@ def phylogeny(node):
         node.img_style["shape"] = "square"
         node.img_style["size"] = 4
         node.img_style["fgcolor"] = leaf_color
-        faces.add_face_to_node( faces.AttrFace("name","Arial",11,leaf_color,None), node, 0 )
+        faces.add_face_to_node( faces.AttrFace("name", ftype="Arial", fsize=11,
+                                               fgcolor=leaf_color, penwidth=None), node, 0 )
         if hasattr(node,"sequence"):
             SequenceFace =  faces.SequenceFace(node.sequence,"aa",13)
             faces.add_face_to_node(SequenceFace, node, 1, aligned=True)
@@ -218,8 +220,8 @@ def evol_layout(node):
         if node._w  < 0.2 :
             node.img_style["fgcolor"] = "#000000"
     if hasattr(node,"extras"):
-        faces.add_face_to_node( faces.AttrFace("extras", "Arial", 7, \
-                                               "#000000", None), node, 2 )
+        faces.add_face_to_node( faces.AttrFace("extras", fstyle="Arial", fsize=7, \
+                                               fgcolor="#000000", penwidth=None), node, 2 )
     #if node.is_leaf():
     if hasattr (node, "sequence"):
         seqface =  faces.SequenceFace(node.sequence, interactive=True,
@@ -237,13 +239,13 @@ def evol_clean_layout(node):
     leaf_color = "#000000"
     node.img_style["size"] = 2
     if node.is_leaf():
-        #if hasattr (node,"highlight"):
-        #    faces.add_face_to_node(faces.AttrFace("name", "Arial", 9, \
-        #                                          node.highlight,
-        #                                          None), \
-        #                           node, 0 )
+        # if hasattr (node,"highlight"):
+        #     faces.add_face_to_node(faces.AttrFace("name", "Arial", fsize=9,
+        #                                           fgcolor=node.highlight, penwidth=None), \
+        #                            node, 0 )
         #else:
-        #    leaface = faces.AttrFace("name", "Arial", 9, leaf_color, None)
+        #    leaface = faces.AttrFace("name", fstyle="Arial", fsize=9,\
+        #       fgcolor=leaf_color, penwidth=None)
         #    leaface.margin_right = 10
         #    faces.add_face_to_node (leaface, node, 0)
         if hasattr (node, "sequence"):
@@ -259,5 +261,5 @@ def evol_clean_layout(node):
                                               fsize=6, fgcolor="#787878"),
                                 node, 0, position="branch-bottom")
     if hasattr(node,"extras"):
-        faces.add_face_to_node( faces.AttrFace("extras", "Arial", 7, \
-                                               "#000000", None), node, 2 )
+        faces.add_face_to_node( faces.AttrFace("extras", fstyle="Arial", fsize=7, \
+                                               fgcolor="#000000", penwidth=None), node, 2 )

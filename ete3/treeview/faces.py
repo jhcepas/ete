@@ -192,24 +192,27 @@ class Face(object):
                  "vt_align", "background", "border", "inner_border",
                  "inner_background", "rotation", "node", "type"]
 
-    def __init__(self):
+    def __init__(self, node=None, type="pixmap", margin_left=0, margin_right=0,
+                margin_top=0, margin_bottom=0, pixmap=None, opacity=1.0,
+                 rotable=True, hz_align=0, vt_align=1, background=_Background(),
+                border=_Border(), inner_background=_Background(), rotation=0):
         self.node        = None
         self.type = "pixmap" # pixmap, text or item
 
-        self.margin_left = 0
-        self.margin_right = 0
-        self.margin_top = 0
-        self.margin_bottom = 0
-        self.pixmap = None
-        self.opacity = 1.0
-        self.rotable = True
-        self.hz_align = 0 # 0 left, 1 center, 2 right
-        self.vt_align = 1
-        self.background = _Background()
-        self.border = _Border()
-        self.inner_border = _Border()
-        self.inner_background = _Background()
-        self.rotation = 0
+        self.margin_left = margin_left
+        self.margin_right = margin_right
+        self.margin_top = margin_top
+        self.margin_bottom = margin_bottom
+        self.pixmap = pixmap
+        self.opacity = opacity
+        self.rotable = rotable
+        self.hz_align = hz_align # 0 left, 1 center, 2 right
+        self.vt_align = vt_align
+        self.background = background # _Background()
+        self.border = border # _Border()
+        self.inner_border = border # _Border()
+        self.inner_background = background #  _Background()
+        self.rotation = rotation #0
 
     def _size(self):
         if self.pixmap:
@@ -252,18 +255,23 @@ class TextFace(Face):
         approximated according to general font metrics, producing slightly
         worse aligned text faces but improving the performance of tree
         visualization in scenes with a lot of text faces.
+    :param False bold: False or True
+    :param True rotable: If True, face will be rotated when necessary (i.e. when
+     circular mode is enabled and face occupies an inverted position.)
     """
     __slots__ = ["fgcolor", "fstyle", "fsize", "ftype", "penwidth",
                  "tight_text", "bold", "_text", "_bounding_rect", "_real_rect"]
 
-    def __init__(self, text, ftype="Verdana", fsize=10,
-                 fgcolor="black", penwidth=0, fstyle="normal",
-                 tight_text=False, bold=False):
+    def __init__(self, text, ftype="Verdana", fsize=10, fgcolor="black",
+                 penwidth=0, fstyle="normal", tight_text=False, bold=False,
+                 **kwargs):
+
+        super(TextFace, self).__init__( **kwargs)
+
         self._text = str(text)
         self._bounding_rect = None
         self._real_rect = None
 
-        Face.__init__(self)
         self.pixmap = None
         self.type = "text"
         self.fgcolor = fgcolor
@@ -350,6 +358,9 @@ class AttrFace(TextFace):
     :param formatter: a text string defining a python formater to
       process the attribute value before renderer. e.g. "%0.2f"
     :param fstyle: "normal" or "italic"
+    :param False bold: False or True
+    :param True rotable: If True, face will be rotated when necessary (i.e. when
+     circular mode is enabled and face occupies an inverted position.)
     """
 
     __slots__ = ["attr", "text_suffix", "text_prefix", "attr_formatter", "_bounding_rect_text"]
@@ -381,14 +392,13 @@ class AttrFace(TextFace):
             self._bounding_rect_text = current_text
         return self._real_rect
 
-    def __init__(self, attr, ftype="Verdana", fsize=10,
-                 fgcolor="black", penwidth=0, text_prefix="",
-                 text_suffix="", formatter=None, fstyle="normal",
-                 tight_text=False):
+    def __init__(self, attr, text_prefix="", text_suffix="", formatter=None,
+                 **kwargs):
 
-        Face.__init__(self)
-        TextFace.__init__(self, None, ftype, fsize, fgcolor, penwidth,
-                          fstyle, tight_text)
+        super(AttrFace, self).__init__(text=None, **kwargs)
+        # Face.__init__(self)
+        # TextFace.__init__(self, None, ftype, fsize, fgcolor, penwidth,
+        #                   fstyle, tight_text, bold, rotable)
         self.attr = attr
         self.type  = "text"
         self.text_prefix = text_prefix
