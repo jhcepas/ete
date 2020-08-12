@@ -371,7 +371,7 @@ class NCBITaxa(object):
             elif intermediate_nodes:
                 return list(map(int, [n.name for n in tree.get_descendants()]))
             else:
-                return map(int, [n.name for n in tree])
+                return list(map(int, [n.name for n in tree]))
                 
         elif intermediate_nodes:
             return [tid for tid, count in six.iteritems(descendants)]
