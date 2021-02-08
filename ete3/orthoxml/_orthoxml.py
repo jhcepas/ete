@@ -447,13 +447,13 @@ class orthoXML(GeneratedsSuper):
     def exportAttributes(self, outfile, level, already_processed, namespace_='ortho:', name_='orthoXML'):
         if self.origin is not None and 'origin' not in already_processed:
             already_processed.append('origin')
-            outfile.write(' origin=%s' % (self.gds_format_string(quote_attrib(self.origin).encode(ExternalEncoding), input_name='origin'), ))
+            outfile.write(' origin=%s' % (self.gds_format_string(quote_attrib(self.origin), input_name='origin'), ))
         if self.version is not None and 'version' not in already_processed:
             already_processed.append('version')
             outfile.write(' version="%s"' % self.gds_format_float(self.version, input_name='version'))
         if self.originVersion is not None and 'originVersion' not in already_processed:
             already_processed.append('originVersion')
-            outfile.write(' originVersion=%s' % (self.gds_format_string(quote_attrib(self.originVersion).encode(ExternalEncoding), input_name='originVersion'), ))
+            outfile.write(' originVersion=%s' % (self.gds_format_string(quote_attrib(self.originVersion), input_name='originVersion'), ))
     def exportChildren(self, outfile, level, namespace_='ortho:', name_='orthoXML', fromsubclass_=False):
         if self.notes:
             self.notes.export(outfile, level, namespace_, name_='notes')
@@ -609,7 +609,7 @@ class species(GeneratedsSuper):
     def exportAttributes(self, outfile, level, already_processed, namespace_='ortho:', name_='species'):
         if self.name is not None and 'name' not in already_processed:
             already_processed.append('name')
-            outfile.write(' name=%s' % (self.gds_format_string(quote_attrib(self.name).encode(ExternalEncoding), input_name='name'), ))
+            outfile.write(' name=%s' % (self.gds_format_string(quote_attrib(self.name), input_name='name'), ))
         if self.NCBITaxId is not None and 'NCBITaxId' not in already_processed:
             already_processed.append('NCBITaxId')
             outfile.write(' NCBITaxId="%s"' % self.gds_format_integer(self.NCBITaxId, input_name='NCBITaxId'))
@@ -740,19 +740,19 @@ class database(GeneratedsSuper):
     def exportAttributes(self, outfile, level, already_processed, namespace_='ortho:', name_='database'):
         if self.transcriptLink is not None and 'transcriptLink' not in already_processed:
             already_processed.append('transcriptLink')
-            outfile.write(' transcriptLink=%s' % (self.gds_format_string(quote_attrib(self.transcriptLink).encode(ExternalEncoding), input_name='transcriptLink'), ))
+            outfile.write(' transcriptLink=%s' % (self.gds_format_string(quote_attrib(self.transcriptLink), input_name='transcriptLink'), ))
         if self.protLink is not None and 'protLink' not in already_processed:
             already_processed.append('protLink')
-            outfile.write(' protLink=%s' % (self.gds_format_string(quote_attrib(self.protLink).encode(ExternalEncoding), input_name='protLink'), ))
+            outfile.write(' protLink=%s' % (self.gds_format_string(quote_attrib(self.protLink), input_name='protLink'), ))
         if self.geneLink is not None and 'geneLink' not in already_processed:
             already_processed.append('geneLink')
-            outfile.write(' geneLink=%s' % (self.gds_format_string(quote_attrib(self.geneLink).encode(ExternalEncoding), input_name='geneLink'), ))
+            outfile.write(' geneLink=%s' % (self.gds_format_string(quote_attrib(self.geneLink), input_name='geneLink'), ))
         if self.name is not None and 'name' not in already_processed:
             already_processed.append('name')
-            outfile.write(' name=%s' % (self.gds_format_string(quote_attrib(self.name).encode(ExternalEncoding), input_name='name'), ))
+            outfile.write(' name=%s' % (self.gds_format_string(quote_attrib(self.name), input_name='name'), ))
         if self.version is not None and 'version' not in already_processed:
             already_processed.append('version')
-            outfile.write(' version=%s' % (self.gds_format_string(quote_attrib(self.version).encode(ExternalEncoding), input_name='version'), ))
+            outfile.write(' version=%s' % (self.gds_format_string(quote_attrib(self.version), input_name='version'), ))
     def exportChildren(self, outfile, level, namespace_='ortho:', name_='database', fromsubclass_=False):
         if self.genes:
             self.genes.export(outfile, level, namespace_, name_='genes', )
@@ -962,16 +962,16 @@ class gene(GeneratedsSuper):
     def exportAttributes(self, outfile, level, already_processed, namespace_='ortho:', name_='gene'):
         if self.protId is not None and 'protId' not in already_processed:
             already_processed.append('protId')
-            outfile.write(' protId=%s' % (self.gds_format_string(quote_attrib(self.protId).encode(ExternalEncoding), input_name='protId'), ))
+            outfile.write(' protId=%s' % (self.gds_format_string(quote_attrib(self.protId), input_name='protId'), ))
         if self.id is not None and 'id' not in already_processed:
             already_processed.append('id')
             outfile.write(' id="%s"' % self.gds_format_integer(self.id, input_name='id'))
         if self.geneId is not None and 'geneId' not in already_processed:
             already_processed.append('geneId')
-            outfile.write(' geneId=%s' % (self.gds_format_string(quote_attrib(self.geneId).encode(ExternalEncoding), input_name='geneId'), ))
+            outfile.write(' geneId=%s' % (self.gds_format_string(quote_attrib(self.geneId), input_name='geneId'), ))
         if self.transcriptId is not None and 'transcriptId' not in already_processed:
             already_processed.append('transcriptId')
-            outfile.write(' transcriptId=%s' % (self.gds_format_string(quote_attrib(self.transcriptId).encode(ExternalEncoding), input_name='transcriptId'), ))
+            outfile.write(' transcriptId=%s' % (self.gds_format_string(quote_attrib(self.transcriptId), input_name='transcriptId'), ))
     def exportChildren(self, outfile, level, namespace_='ortho:', name_='gene', fromsubclass_=False):
         pass
     def hasContent_(self):
@@ -1277,7 +1277,7 @@ class group(GeneratedsSuper):
     def exportAttributes(self, outfile, level, already_processed, namespace_='ortho:', name_='group'):
         if self.id is not None and 'id' not in already_processed:
             already_processed.append('id')
-            outfile.write(' id=%s' % (self.gds_format_string(quote_attrib(self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(' id=%s' % (self.gds_format_string(quote_attrib(self.id), input_name='id'), ))
     def exportChildren(self, outfile, level, namespace_='ortho:', name_='group', fromsubclass_=False):
         for score_ in self.score:
             score_.export(outfile, level, namespace_, name_='score')
@@ -1576,7 +1576,7 @@ class scoreDef(GeneratedsSuper):
             outfile.write(' id=%s' % (quote_attrib(self.id), ))
         if self.desc is not None and 'desc' not in already_processed:
             already_processed.append('desc')
-            outfile.write(' desc=%s' % (self.gds_format_string(quote_attrib(self.desc).encode(ExternalEncoding), input_name='desc'), ))
+            outfile.write(' desc=%s' % (self.gds_format_string(quote_attrib(self.desc), input_name='desc'), ))
     def exportChildren(self, outfile, level, namespace_='ortho:', name_='scoreDef', fromsubclass_=False):
         pass
     def hasContent_(self):
@@ -1744,10 +1744,10 @@ class property(GeneratedsSuper):
     def exportAttributes(self, outfile, level, already_processed, namespace_='ortho:', name_='property'):
         if self.name is not None and 'name' not in already_processed:
             already_processed.append('name')
-            outfile.write(' name=%s' % (self.gds_format_string(quote_attrib(self.name).encode(ExternalEncoding), input_name='name'), ))
+            outfile.write(' name=%s' % (self.gds_format_string(quote_attrib(self.name), input_name='name'), ))
         if self.value is not None and 'value' not in already_processed:
             already_processed.append('value')
-            outfile.write(' value=%s' % (self.gds_format_string(quote_attrib(self.value).encode(ExternalEncoding), input_name='value'), ))
+            outfile.write(' value=%s' % (self.gds_format_string(quote_attrib(self.value), input_name='value'), ))
     def exportChildren(self, outfile, level, namespace_='ortho:', name_='property', fromsubclass_=False):
         pass
     def hasContent_(self):
