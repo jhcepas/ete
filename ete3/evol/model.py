@@ -217,8 +217,7 @@ class Model:
         if not 'ylim' in kwargs:
             kwargs['ylim'] = (0, 2)
         if errors:
-            errors = self.sites[val]['se'] if 'se' in self.sites[val]\
-                     else None
+            errors = self.sites[val].get('se', None)
         if TREEVIEW:
             try:
                 hist = SequencePlotFace(self.sites[val]['w'], hlines=hlines,
@@ -336,7 +335,7 @@ class Model:
                                     self.sites[val]['class']):
             if pval < 0.95:
                 categories.append('NS')
-            elif curr_class != self.n_classes[val] and not ps_model:
+            elif curr_class == self.n_classes[val] and not ps_model:
                 if pval < 0.99:
                     categories.append('RX')
                 else:
