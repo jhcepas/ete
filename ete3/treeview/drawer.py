@@ -98,11 +98,12 @@ def render_tree(t, imgName, w=None, h=None, layout=None,
                 dpi=90):
     """ Render tree image into a file."""
     global _QApp
-    for nid, n in enumerate(t.traverse("preorder")):
-        n.add_feature("_nid", nid)
+
     scene, img = init_scene(t, layout, tree_style)
     tree_item, n2i, n2f = render(t, img)
-
+    # nid should contains all nodes
+    for nid, n in enumerate(n2i.keys()):
+        n.add_feature("_nid", nid)
     scene.init_values(t, img, n2i, n2f)
     tree_item.setParentItem(scene.master_item)
     scene.master_item.setPos(0,0)

@@ -351,9 +351,13 @@ def render(root_node, img, hide_root=False):
         mainRect.adjust(_x, _y, _x, _y)
 
     # Add extra components and adjust mainRect to them
+
     add_legend(img, mainRect, frame)
     add_title(img, mainRect, frame)
     add_scale(img, mainRect, frame)
+    tree_face_n2i, treeface_n2f = add_treeface(img, mainRect, frame)
+    n2i.update(tree_face_n2i)
+    n2f.update(treeface_n2f)
     frame.setRect(mainRect)
 
     # Draws a border around the tree
@@ -409,28 +413,58 @@ def add_title(img, mainRect, parent):
         mainRect.adjust(0, -lg_h, dw, 0)
         title.setPos(mainRect.topLeft())
 
-def add_legend(img, mainRect, parent):
-    if img.legend:
-        legend = _FaceGroupItem(img.legend, None)
-        legend.setup_grid()
-        legend.render()
-        lg_w, lg_h = legend.get_size()
+def add_treeface(img, mainRect, parent):
+    n2i, n2f = {}, {}
+    if img.aligned_treeface_vt:
+        treeface = _FaceGroupItem(img.aligned_treeface_vt, None)
+        treeface.setup_grid()
+        treeface.render()
+        lg_w, lg_h = treeface.get_size()
         dw = max(0, lg_w-mainRect.width())
-        legend.setParentItem(parent)
-        if img.legend_position == 1:
+        dh = max(0, lg_h-mainRect.height())
+        treeface.setParentItem(parent)
+        if img.treeface_position_vt == -1:
             mainRect.adjust(0, -lg_h, dw, 0)
-            legend.setPos(mainRect.topLeft())
-        elif img.legend_position == 2:
-            mainRect.adjust(0, -lg_h, dw, 0)
+            treeface.setPos(mainRect.topLeft())
+        else:
+            treeface.setPos(mainRect.bottomLeft())
+            mainRect.adjust(0, 0, dw, lg_h)
+
+        # return n2i and n2f for the added trees
+        # Those will be used to update parent dict
+        for (k, facelist) in treeface.column2faces.items():
+            for f in facelist:
+                if isinstance(f, faces.TreeFace):
+                    n2i.update(f.n2i)
+                    n2f.update(f.n2f)
+
+    if img.aligned_treeface_hz:
+        treeface = _FaceGroupItem(img.aligned_treeface_hz, None)
+        treeface.setup_grid()
+        treeface.render()
+        lg_w, lg_h = treeface.get_size()
+        dw = max(0, lg_w-mainRect.width())
+        dh = max(0, lg_h-mainRect.height())
+        treeface.setParentItem(parent)
+        if img.treeface_position_hz == -1:
+            mainRect.adjust(-lg_w, 0, 0, dh)
+            treeface.setPos(mainRect.topLeft())
+        else:
+            mainRect.adjust(0, 0, lg_w, dh)
             pos = mainRect.topRight()
-            legend.setPos(pos.x()-lg_w, pos.y())
-        elif img.legend_position == 3:
-            legend.setPos(mainRect.bottomLeft())
-            mainRect.adjust(0, 0, dw, lg_h)
-        elif img.legend_position == 4:
-            pos = mainRect.bottomRight()
-            legend.setPos(pos.x()-lg_w, pos.y())
-            mainRect.adjust(0, 0, dw, lg_h)
+            treeface.setPos(pos.x()-lg_w, 0)
+
+        # return n2i and n2f for the added trees
+        # Those will be used to update parent dict
+        for (k, facelist) in treeface.column2faces.items():
+            for f in facelist:
+                if isinstance(f, faces.TreeFace):
+                    n2i.update(f.n2i)
+                    n2f.update(f.n2f)
+
+
+    return n2i, n2f
+
 
 def add_scale(img, mainRect, parent):
     if img.show_scale:
@@ -1091,7 +1125,7 @@ def init_node_dimensions(node, item, faceblock, img):
 
     # Calculate total node size
     total_w = sum([w0, w1, w2, w3, w4, item.xoff]) # do not count aligned faces
-	
+    
     if img.mode == "c":
         max_h = max(item.heights[:4] + [min_separation])
     elif img.mode == "r":

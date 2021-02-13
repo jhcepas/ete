@@ -398,6 +398,16 @@ class TreeStyle(object):
 
     :param title: A Face container that can be used as tree title
 
+    :param aligned_treeface_vt: a :class:`TreeFaceContainer` to vertically stack multiple trees
+      on a grid. Trees are left aligned. Use `treeface_position_vt` to specify where
+      the new TreeFace should be added.
+    :param 1 treeface_position_vt=1: row above if -1 and row below if 1
+
+    :param aligned_treeface_hz: a :class:`TreeFaceContainer` to horizontally stack multiple trees
+      on a grid. Trees are top aligned. Use `treeface_position_hz` to specify where
+      the new TreeFace should be added.
+    :param 1 treeface_position_hz=1: add tree to left if -1 and to right if 1
+
     """
 
     def set_layout_fn(self, layout):
@@ -532,6 +542,13 @@ class TreeStyle(object):
         self.aligned_header = FaceContainer()
         self.aligned_foot = FaceContainer()
 
+        # Initialized aligned TreeFace
+        self.aligned_treeface_vt = TreeFaceContainer()
+        self.aligned_treeface_hz = TreeFaceContainer()
+        # By default the Face will be added on the same row
+        self.treeface_position_vt = 1
+        self.treeface_position_hz = 1
+
         self.show_leaf_name = True
         self.show_branch_length = False
         self.show_branch_support = False
@@ -583,6 +600,22 @@ class FaceContainer(dict):
         add the face **face** to the specified **column**
         """
         self.setdefault(int(column), []).append(face)
+
+
+class TreeFaceContainer(FaceContainer):
+    """
+    FaceContainer that support only TreeFace
+    """
+    def add_face(self, face, column):
+        """
+        add the TreeFace **face** to the specified **column**
+        """
+        # In order to avoid import from faces
+        if face.__class__.__name__ != 'TreeFace':
+            raise Exception("Only TreeFace can be added to this container")
+
+        self.setdefault(int(column), []).append(face)
+
 
 def _leaf(node):
     collapsed = hasattr(node, "_img_style") and not node.img_style["draw_descendants"]
