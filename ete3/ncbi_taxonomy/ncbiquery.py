@@ -107,7 +107,7 @@ class NCBITaxa(object):
         if taxdump_file:
             self.update_taxonomy_database(taxdump_file)
 
-        if dbfile is None and not os.path.exists(self.dbfile):
+        if dbfile != DEFAULT_TAXADB and not os.path.exists(self.dbfile):
             print('NCBI database not present yet (first time used?)', file=sys.stderr)
             self.update_taxonomy_database(taxdump_file)
 

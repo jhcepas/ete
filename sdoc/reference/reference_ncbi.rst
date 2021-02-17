@@ -1,10 +1,10 @@
-.. module:: ete2.ncbi_taxonomy
+.. module:: ete3.ncbi_taxonomy
 
 ====================
 NCBITaxa class
 ====================
 
-.. autoclass:: ete2.NCBITaxa
+.. autoclass:: ete3.NCBITaxa
    :members:
    :undoc-members:
    :show-inheritance:
