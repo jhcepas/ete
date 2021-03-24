@@ -703,7 +703,8 @@ def save(scene, imgName, w=None, h=None, dpi=90,\
             compatible_code = str(ba)
             print('from memory')
         else:
-            compatible_code = open(imgName).read()
+            with open(imgName) as f_in:
+                compatible_code = f_in.read()
         # Fix a very annoying problem with Radial gradients in
         # inkscape and browsers...
         compatible_code = compatible_code.replace("xml:id=", "id=")
@@ -718,7 +719,8 @@ def save(scene, imgName, w=None, h=None, dpi=90,\
         elif imgName == '%%return':
             return x_scale, y_scale, compatible_code
         else:
-            open(imgName, "w").write(compatible_code)
+            with open(imgName, "w") as f_out:
+                f_out.write(compatible_code)
 
 
     elif ext == "PDF" or ext == "PS":

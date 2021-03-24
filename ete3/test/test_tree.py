@@ -805,7 +805,12 @@ class Test_Coretype_Tree(unittest.TestCase):
 
         # Convert tree to a ultrametric topology in which distance from
         # leaf to root is always 100. Two strategies are available:
-        # balanced or fixed
+        # weighted, balanced or fixed
+        t =  Tree()
+        t.populate(100, random_branches=True)
+        t.convert_to_ultrametric(100, "weighted")
+        self.assertEqual(set([round(t.get_distance(n), 6) for n in t]), set([100.0]))
+
         t =  Tree()
         t.populate(100, random_branches=True)
         t.convert_to_ultrametric(100, "balanced")
@@ -814,11 +819,6 @@ class Test_Coretype_Tree(unittest.TestCase):
         t =  Tree()
         t.populate(100, random_branches=True)
         t.convert_to_ultrametric(100, "fixed")
-        self.assertEqual(set([round(t.get_distance(n), 6) for n in t]), set([100.0]))
-
-        t =  Tree()
-        t.populate(100, random_branches=True)
-        t.convert_to_ultrametric(100, "balanced")
         self.assertEqual(set([round(t.get_distance(n), 6) for n in t]), set([100.0]))
 
 

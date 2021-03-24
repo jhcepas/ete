@@ -107,6 +107,8 @@ def read_fasta(source, obj=None, header_delimiter="\t", fix_duplicates=True):
             # append to seq_string
             SC.id2seq[seq_id] += s
 
+    if os.path.isfile(source):
+        _source.close()
     if seq_name and SC.id2seq[seq_id] == "":
         print(seq_name,"has no sequence", file=STDERR)
         return None

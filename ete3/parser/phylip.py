@@ -141,6 +141,9 @@ def read_phylip(source, interleaved=True, obj=None,
                     SG.id2seq[id_counter] += seq
                     id_counter += 1
 
+    if os.path.isfile(source):
+        _source.close()
+
     if len(SG) != ntax:
         raise Exception("Unexpected number of sequences.")
 

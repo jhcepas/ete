@@ -9,7 +9,7 @@ class Test_Coretype_SeqGroup(unittest.TestCase):
     def test_fasta_parser(self):
         """ test fasta read an write """
         # FASTA IO
-        open("/tmp/ete_test_fasta.txt","w").write(fasta_example)
+        with open("/tmp/ete_test_fasta.txt", "w") as f: f.write(fasta_example)
         # Test reading from file and from string
         SEQS = SeqGroup(fasta_example)
         SEQS2 = SeqGroup("/tmp/ete_test_fasta.txt")
@@ -36,7 +36,7 @@ class Test_Coretype_SeqGroup(unittest.TestCase):
     def test_phylip_parser(self):
         """ Tests phylip read and write """
         # PHYLIP INTERLEAVED
-        open("/tmp/ete_test_iphylip.txt","w").write(phylip_interlived)
+        with open("/tmp/ete_test_iphylip.txt", "w") as f1: f1.write(phylip_interlived)
         SEQS = SeqGroup("/tmp/ete_test_iphylip.txt", format="iphylip")
         SEQS2 = SeqGroup(phylip_interlived, format="iphylip")
         self.assertEqual(SEQS.write(), SEQS2.write())
@@ -51,7 +51,7 @@ class Test_Coretype_SeqGroup(unittest.TestCase):
         self.assertEqual(SEQS.get_entries(), [e for e in SEQS])
 
         # PHYLIP SEQUENCIAL FORMAT
-        open("/tmp/ete_test_phylip.txt","w").write(phylip_sequencial)
+        with open("/tmp/ete_test_phylip.txt","w") as f2: f2.write(phylip_sequencial)
         SEQS = SeqGroup("/tmp/ete_test_phylip.txt", format="phylip")
         SEQS2 = SeqGroup(phylip_sequencial, format="phylip")
         self.assertEqual(SEQS.write(), SEQS2.write())

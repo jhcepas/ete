@@ -33,7 +33,7 @@ class Test_Coretype_ArrayTable(unittest.TestCase):
                                   0.23000000000000001, -0.29999999999999999])
 
         A.remove_column("col4")
-        self.assert_(A.get_column_vector("col4") is None )
+        self.assertTrue(A.get_column_vector("col4") is None)
 
         Abis = A.merge_columns({"merged1": \
                                     ["col1", "col2"],\

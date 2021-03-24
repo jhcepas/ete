@@ -2081,7 +2081,7 @@ class TreeNode(object):
     #         all_partitions.add(p2)
     #     return all_partitions
 
-    def convert_to_ultrametric(self, tree_length=None, strategy='balanced'):
+    def convert_to_ultrametric(self, tree_length=None, strategy="balanced"):
         """
         .. versionadded: 2.1
 
@@ -2092,41 +2092,81 @@ class TreeNode(object):
         """
 
         # Could something like this replace the old algorithm?
-        #most_distant_leaf, tree_length = self.get_farthest_leaf()
-        #for leaf in self:
+        # most_distant_leaf, tree_length = self.get_farthest_leaf()
+        # for leaf in self:
         #    d = leaf.get_distance(self)
         #    leaf.dist += (tree_length - d)
-        #return
+        # return
 
+        # get origin distance to root
+        dist2root = {self: 0.0}
+        for node in self.iter_descendants("levelorder"):
+            dist2root[node] = dist2root[node.up] + node.dist
 
-
-        # pre-calculate how many splits remain under each node
-        node2max_depth = {}
-        for node in self.traverse("postorder"):
-            if not node.is_leaf():
-                max_depth = max([node2max_depth[c] for c in node.children]) + 1
-                node2max_depth[node] = max_depth
-            else:
-                node2max_depth[node] = 1
-        node2dist = {self: 0.0}
+        # get tree length by the maximum
         if not tree_length:
-            most_distant_leaf, tree_length = self.get_farthest_leaf()
+            tree_length = max(dist2root.values())
         else:
             tree_length = float(tree_length)
 
+        if strategy == "weighted":
+            def _median(nums):
+                n = len(nums)
+                s = sorted(nums)
+                return (sum(s[n // 2 - 1 : n // 2 + 1]) / 2.0, s[n // 2])[n % 2]
 
-        step = tree_length / node2max_depth[self]
-        for node in self.iter_descendants("levelorder"):
-            if strategy == "balanced":
+            # get remaining distance to tree tips
+            dist2tip = {self: tree_length}
+            # modify the dist property of nodes
+            for node in self.iter_descendants("levelorder"):
+                if node.is_leaf():
+                    node.dist = dist2tip[node.up]
+                else:
+                    # weight the distance of children nodes by their median
+                    cdist = (
+                        _median([dist2root[l] for l in node]) - dist2root[node]
+                    )
+                    if cdist == 0:
+                        node.dist = dist2tip[node.up]
+                    else:
+                        node.dist = dist2tip[node.up] * node.dist / (cdist + node.dist)
+                dist2tip[node] = dist2tip[node.up] - node.dist
+
+        elif strategy == "balanced":
+            # pre-calculate how many splits remain under each node
+            node2max_depth = {}
+            for node in self.traverse("postorder"):
+                if node.is_leaf():
+                    node2max_depth[node] = 1
+                else:
+                    node2max_depth[node] = max([node2max_depth[c] for c in node.children]) + 1
+
+            # modify the dist property of nodes
+            node2dist = {self: 0.0}
+            for node in self.iter_descendants("levelorder"):
                 node.dist = (tree_length - node2dist[node.up]) / node2max_depth[node]
-                node2dist[node] =  node.dist + node2dist[node.up]
-            elif strategy == "fixed":
+                node2dist[node] = node.dist + node2dist[node.up]
+
+        elif strategy == "fixed":
+            # get tree depth by the maximum
+            step2root = {self: 0}
+            for node in self.iter_descendants("levelorder"):
+                step2root[node] = step2root[node.up] + 1
+            tree_step = max(step2root.values()) + 1
+            step = tree_length / tree_step
+
+            # modify the dist property of nodes
+            node2dist = {self: 0.0}
+            for node in self.iter_descendants("levelorder"):
                 if not node.is_leaf():
                     node.dist = step
                 else:
                     node.dist = tree_length - ((node2dist[node.up]) * step)
                 node2dist[node] = node2dist[node.up] + 1
-            node.dist = node.dist
+
+        else:
+            raise ValueError("[%s] is not a valid strategy." % strategy)
+
 
     def check_monophyly(self, values, target_attr, ignore_missing=False,
                         unrooted=False):

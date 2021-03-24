@@ -165,6 +165,9 @@ def read_paml (source, obj=None, header_delimiter="\t", fix_duplicates=True):
                     elif len(SC.id2seq[seq_id]) > len_seq:
                         raise  Exception("Error reading sequences: Wrong sequence length.\n"+line)
 
+    if os.path.isfile(source):
+        _source.close()
+
     if seq_name and SC.id2seq[seq_id] == "":
         print(seq_name,"has no sequence", file=STDERR)
         return None
