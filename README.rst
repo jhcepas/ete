@@ -3,7 +3,7 @@
 
 .. image:: https://badges.gitter.im/Join%20Chat.svg
    :alt: Join the chat at https://gitter.im/jhcepas/ete
-   :target: https://gitter.im/jhcepas/ete?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge 
+   :target: https://gitter.im/jhcepas/ete?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 ..
    .. image:: https://coveralls.io/repos/jhcepas/ete/badge.png
 
@@ -13,27 +13,30 @@
 .. image:: http://img.shields.io/badge/biostars-etetoolkit-purple.svg
    :target: https://www.biostars.org/t/etetoolkit,ete3,ete,ete2/
 
+.. image:: https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg
+   :target: CODE_OF_CONDUCT.md
+
 
 Overview ETE v4
 -------------------
 
 ETE (Environment for Tree Exploration) is a Python programming toolkit that
 assists in the automated manipulation, analysis and visualization of
-phylogenetic trees. 
+phylogenetic trees.
 
-Main features include: 
- - Read and write support for trees in Newick format 
+Main features include:
+ - Read and write support for trees in Newick format
  - Multiple functions for traversing, searching and manipulating tree topologies and node annotations
  - Integration with NCBI Taxonomic database
  - Integration with GTDB database
- - Programmatic visualization framework 
+ - Programmatic visualization framework
  - Visualization of huge trees based on adaptive zooming
- - Comparing trees 
- - Phylogenetic functions: 
+ - Comparing trees
+ - Phylogenetic functions:
    - orthology detection
    - phylogenetic distance?
 
-- Command line tools: 
+- Command line tools:
  - phylogenetic reconstruction protocols
  - tree comparison
  - tree diff
@@ -57,18 +60,18 @@ Install and Documentation
 
 Gallery of examples
 --------------------
-  
+
 .. image:: https://raw.githubusercontent.com/jhcepas/ete/master/sdoc/gallery.png
    :width: 600
-  
+
 Getting Support
 ------------------
 **Please, whenerver possible, avoid sending direct support-related emails to
 the developers. Keep communication public:**
 
-- For any type of question on how to use ETE in the bioinformatics context, use BioStars (http://biostars.org) or even StackOverflow forums. 
+- For any type of question on how to use ETE in the bioinformatics context, use BioStars (http://biostars.org) or even StackOverflow forums.
 
-  Please use the **"etetoolkit"** tag for your questions: 
+  Please use the **"etetoolkit"** tag for your questions:
 
    .. image:: http://img.shields.io/badge/stackoverflow-etetoolkit-blue.svg
       :target: https://stackoverflow.com/questions/tagged/etetoolkit+or+ete3
@@ -85,14 +88,9 @@ the developers. Keep communication public:**
   your first message and account is validated.
 
 - For any other inquire (collaborations, sponsoring, etc), please contact *jhcepas /at/ gmail.com*
-   
+
 
 Contributing and BUG reporting
----------------------------------
-https://github.com/etetoolkit/ete/wiki/Contributing
-
-
-Code of Conduct
 ---------------------------------
 https://github.com/etetoolkit/ete/wiki/Contributing
 
@@ -100,5 +98,3 @@ https://github.com/etetoolkit/ete/wiki/Contributing
 ROADMAP
 --------
 https://github.com/etetoolkit/ete/wiki/ROADMAP
-
-
