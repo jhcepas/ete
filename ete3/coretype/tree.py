@@ -48,6 +48,7 @@ from functools import cmp_to_key
 
 import six
 from six.moves import (cPickle, map, range, zip)
+import sys
 
 from ..parser.newick import read_newick, write_newick
 from .. import utils
@@ -1393,7 +1394,7 @@ class TreeNode(object):
                                     layout=layout, tree_style=tree_style,
                                       units=units, dpi=dpi)
 
-    def copy(self, method="cpickle"):
+    def copy(self, method="cpickle", max_rec=0x100000):
         """.. versionadded: 2.1
 
         Returns a copy of the current node.
@@ -1423,6 +1424,7 @@ class TreeNode(object):
              etc.)
 
         """
+        sys.setrecursionlimit(max_rec)
         method = method.lower()
         if method=="newick":
             new_node = self.__class__(self.write(features=["name"], format_root_node=True))
