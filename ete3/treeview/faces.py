@@ -63,7 +63,7 @@ from six.moves import zip
 from .qt import (QGraphicsRectItem, QGraphicsLineItem,
                  QGraphicsPolygonItem, QGraphicsEllipseItem,
                  QPen, QColor, QBrush, QPolygonF, QFont,
-                 QPixmap, QFontMetrics, QPainter,
+                 QPixmap, QFontMetrics, QPainter, QPainterPath,
                  QRadialGradient, QGraphicsSimpleTextItem, QGraphicsTextItem,
                  QGraphicsItem, Qt,  QPointF, QRect, QRectF, QGraphicsSvgItem)
 
@@ -861,7 +861,7 @@ class ProfileFace(Face):
             y+= y_step
             x2 = 0
         p.end()
-        
+
     def fit_to_scale(self,v):
         if v<self.min_value:
             return float(self.min_value)
@@ -2420,3 +2420,68 @@ class DiamondFace(StaticItemFace, Face):
     def _height(self):
         return self.height
 
+
+class ArrowFace(Face):
+
+    """
+
+    Creates a color-stripped arrow representation for synteny visualization
+
+    :param width: width of the arrow (min of 10)
+    :param height: height of arrow (min of 10)
+    :param strand: defines gene orientation. "-" entails left-oriented arrows
+                   while "+" strand right-oriented arrows.
+    :param colors: array containing values to color stripes
+
+    """
+
+    def __init__(self, width, height, strand, colors):
+        Face.__init__(self)
+        self.width = width
+        self.height = height
+        self.strand = strand
+        self.colors = colors
+
+    def _width(self):
+        return self.width
+
+    def _height(self):
+        return self.height
+
+    def update_items(self):
+        return
+
+    def update_pixmap(self):
+        # Create pixmap
+        self.pixmap = QPixmap(self.width, self.height)
+        self.pixmap.fill(QColor("white"))
+        p = QPainter(self.pixmap)
+
+        # Create pen
+        solidPen = QPen(QBrush(QColor("black")), 0)
+        solidPen.setStyle(Qt.SolidLine)
+        p.setPen(solidPen)
+
+        # Define bands width and arrow height taking padding into account
+        rect_w = (self.width - 10) / len(self.colors)
+        rect_h = self.height - 10
+
+        # Draw each of the color bands and the arrow pointer depending on the
+        # strand (+,right/-,left)
+        for i, color in enumerate(self.colors):
+            if self.strand == "+":
+                p.fillRect(3 + i*rect_w, 5, math.ceil(rect_w), rect_h, QColor(color))
+                if i == (len(self.colors) - 1):
+                    path = QPainterPath()
+                    path.moveTo(3+(i+1)*rect_w, 5)
+                    path.lineTo(7+(i+1)*rect_w, 5+rect_h / 2)
+                    path.lineTo(3+(i+1)*rect_w, 5+rect_h)
+                    p.fillPath(path, QColor(color))
+            elif self.strand == "-":
+                p.fillRect(7 + i*rect_w, 5, math.ceil(rect_w), rect_h, QColor(color))
+                if i == 0:
+                    path = QPainterPath()
+                    path.moveTo(7, 5)
+                    path.lineTo(3, 5+rect_h / 2)
+                    path.lineTo(7, 5+rect_h)
+                    p.fillPath(path, QColor(color))
