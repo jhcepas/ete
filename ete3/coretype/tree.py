@@ -1658,7 +1658,7 @@ class TreeNode(object):
         :param name attr_t2: Compare trees using a custom node
                               attribute as a node name in target tree.
 
-        :param False attr_t2: If True, consider trees as unrooted.
+        :param False unrooted_trees: If True, consider trees as unrooted.
 
         :param False expand_polytomies: If True, all polytomies in the reference
            and target tree will be expanded into all possible binary
