@@ -49,7 +49,6 @@ from functools import cmp_to_key
 import six
 from six.moves import (cPickle, map, range, zip)
 
-from ..parser.newick import read_newick, write_newick
 from .. import utils
 
 # the following imports are necessary to set fixed styles and faces
@@ -81,9 +80,9 @@ class TreeError(Exception):
 cdef class TreeNode(object):
     cdef public str name
     cdef public double _dist
-    cdef public double _support
+    cdef public dict _properties
     cdef public set features
-    cdef public list _children
+    cdef public Children _children
     cdef public object _up
     cdef public object _img_style
 
@@ -140,12 +139,20 @@ cdef class TreeNode(object):
             raise TreeError('node dist must be a float number')
 
     def _get_support(self):
-        return self._support
+        return self._properties.get('support')
     def _set_support(self, value):
         try:
-            self._support = float(value)
+            self._properties['support'] = float(value)
         except ValueError:
             raise TreeError('node support must be a float number')
+
+    def _get_properties(self):
+        return self._properties
+    def _set_properties(self, value):
+        try:
+            self._properties = dict(value)
+        except ValueError:
+            raise TreeError('node properties must be a dict')
 
     def _get_up(self):
         return self._up
@@ -158,11 +165,11 @@ cdef class TreeNode(object):
     def _get_children(self):
         return self._children
     def _set_children(self, value):
-        if type(value) == list:
+        if type(value) in [list, Children]:
             for n in value:
                 if type(n) != type(self):
                     raise TreeError("Incorrect child node type")
-            self._children = value
+            self._children = Children(self, list(value))
         else:
             raise TreeError("Incorrect children type")
 
@@ -182,6 +189,8 @@ cdef class TreeNode(object):
     dist = property(fget=_get_dist, fset=_set_dist)
     #: Branch support for current node
     support = property(fget=_get_support, fset=_set_support)
+    #: Properties for current node (support included)
+    properties = property(fget=_get_properties, fset=_set_properties)
     #: Pointer to parent node
     up = property(fget=_get_up, fset=_set_up)
     #: A list of children nodes
@@ -203,18 +212,14 @@ cdef class TreeNode(object):
 
     def __init__(self, newick=None, format=0, dist=None, support=None,
                  name=None, quoted_node_names=False):
-        self._children = []
+        self.children = []
         self._up = None
         self._dist = DEFAULT_DIST
-        self._support = DEFAULT_SUPPORT
+        self._properties = {}
         self._img_style = None
         self.features = set([])
         # Add basic features
         self.features.update(["dist", "support", "name"])
-        if dist is not None:
-            self.dist = dist
-        if support is not None:
-            self.support = support
 
         self.name = name if name is not None else DEFAULT_NAME
         self.size = (0, 0) 
@@ -222,10 +227,25 @@ cdef class TreeNode(object):
 
         # Initialize tree
         if newick is not None:
-            self._dist = 0.0
-            read_newick(newick, root_node = self, format=format,
-                        quoted_names=quoted_node_names)
-
+            from ete4.parser.newick import read_newick, get_content_fields
+            if newick == '' or newick[0] != '(':
+                # Get content from incomplete newick string
+                content = get_content_fields(newick.rstrip(';'))
+                self.name, self._dist, self._properties = content
+            else:
+                # Parse complete newick
+                t = read_newick(newick)
+                self.name = t.name
+                self._dist = t.dist
+                self._properties = t.properties
+                self.children = t.children
+        
+        self.support = self.support or DEFAULT_SUPPORT
+        # Custom values if provided
+        if dist is not None:
+            self.dist = dist
+        if support is not None:
+            self.support = support
 
     def __nonzero__(self):
         return True
@@ -851,13 +871,8 @@ cdef class TreeNode(object):
 
         """
 
-        nw = write_newick(self, features=features, format=format,
-                          is_leaf_fn=is_leaf_fn,
-                          format_root_node=format_root_node,
-                          dist_formatter=dist_formatter,
-                          support_formatter=support_formatter,
-                          name_formatter=name_formatter,
-                          quoted_names=quoted_node_names)
+        from ete4.parser.newick import write_newick
+        nw = write_newick(self)
 
         if outfile is not None:
             with open(outfile, "w") as OUT:
@@ -1301,6 +1316,7 @@ cdef class TreeNode(object):
             buffered_support = quien_va_ser_padre.support
 
             while quien_va_ser_hijo is not self:
+                print(buffered_support)
                 quien_va_ser_padre.children.append(quien_va_ser_hijo)
                 quien_va_ser_hijo.children.remove(quien_va_ser_padre)
 
@@ -1451,7 +1467,8 @@ cdef class TreeNode(object):
         elif method == "cpickle":
             parent = self.up
             self.up = None
-            new_node = six.moves.cPickle.loads(six.moves.cPickle.dumps(self, 2))
+            new_node = cPickle.loads(cPickle.dumps(self, 2))
+            print(new_node)
             self.up = parent
         else:
             raise TreeError("Invalid copy method")
@@ -2599,6 +2616,28 @@ cdef class TreeNode(object):
     def phonehome(self):
         from .. import _ph
         _ph.call()
+
+
+cdef class Children(list):
+    "A list that automatically sets the parent of its elements"
+
+    cdef public TreeNode parent
+
+    def __init__(self, parent, nodes=()):
+        super().__init__(nodes)
+        self.parent = parent
+        for node in nodes:
+            node.up = self.parent
+
+    def append(self, node):
+        super().append(node)
+        node.up = self.parent
+
+    def __iadd__(self, nodes):
+        for node in nodes:
+            node.up = self.parent
+        return super().__iadd__(nodes)
+
 
 def _translate_nodes(root, *nodes):
     name2node = dict([ [n, None] for n in nodes if type(n) is str])

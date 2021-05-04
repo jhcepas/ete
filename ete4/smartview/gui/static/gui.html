@@ -2,18 +2,23 @@
 <html>
   <head>
     <title>Tree Explorer</title>
+    <meta charset="utf-8"/>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Expires" content="0" />
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="stylesheet" href="gui.css">
-    <script src="/static/external/dat.gui.js"></script>
-    <script src="/static/external/sweetalert.min.js"></script>
-    <script defer src="/static/gui.js"></script>
+    <script src="/static/external/dat.gui.min.js"></script>
+    <script src="/static/external/sweetalert2.min.js"></script>
+    <script type="module" src="/static/js/gui.js"></script>
   </head>
   <body>
-    <div id="div_tree" class="tree"></div>
-    <div id="div_minimap" class="minimap"></div>
+    <div id="div_tree" class="tree" tabindex="-1"><svg></svg></div>
+    <div id="div_contextmenu" class="contextmenu"></div>
+    <div id="div_aligned" class="aligned"><svg></svg></div>
+    <div id="div_minimap" class="minimap"><svg></svg></div>
     <div id="div_visible_rect" class="visible_rect"></div>
-    <div id="div_datgui" class="datgui"></div>
+    <div id="div_menu_main" class="menu_main"></div>
+    <div id="div_menu_representation" class="menu_representation"></div>
+    <div id="div_menu_tags_searches" class="menu_tags_searches"></div>
   </body>
 </html>

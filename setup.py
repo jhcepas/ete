@@ -91,9 +91,11 @@ please cite:
 Visit http://etetoolkit.org for more info.
 """
 
-extensions = [Extension('ete4.coretype.tree', ['ete4/coretype/tree.pyx']), 
-              Extension('ete4.smartview.draw', ['ete4/smartview/draw.pyx']), 
-              ],
+extensions = [
+        Extension('ete4.coretype.tree', ['ete4/coretype/tree.pyx']), 
+        Extension('ete4.parser.newick', ['ete4/parser/newick.pyx']), 
+        Extension('ete4.smartview.ete.gardening', ['ete4/smartview/ete/gardening.pyx']), 
+            ],
 
 try:
     _s = setup(

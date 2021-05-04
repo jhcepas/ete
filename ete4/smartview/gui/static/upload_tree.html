@@ -1,16 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Upload Tree</title>
+  <title>Tree Explorer</title>
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="stylesheet" href="upload_tree.css">
-  <script defer src="/static/upload_tree.js"></script>
+  <script src="/static/external/sweetalert2.min.js"></script>
+  <script type="module" src="/static/js/upload_tree.js"></script>
 </head>
 
 <body>
-<h1>Upload Tree</h1>
 
-<div id="div_info"></div>
+<div class="centered">
+
+<a href="http://etetoolkit.org"><img src="/static/logo.jpg"></a>
+
+<h1>Tree Explorer</h1>
+
+<p>This is an online tool for exploring trees. It is mainly used to explore
+<a href="https://en.wikipedia.org/wiki/Phylogenetic_tree">phylogenetic trees</a>,
+but it can be used for any tree as long as it is written in the
+<a href="https://en.wikipedia.org/wiki/Newick_format">newick format</a>.
+It is currently in <em>alpha</em> stage &mdash; we still have many improvements
+planned.
+</p>
+
+<p>You can explore some of the pre-loaded trees, such as the
+<a href="/static/gui.html?tree=GTDB_bact_r95">GTDB bacterial phylogeny</a>
+(30k leaves) or the <a href="/static/gui.html?tree=ncbi">NCBI Taxonomy</a>
+(2.1M leaves).
+</p>
+
+<p>You can also add your own trees for exploration by uploading them from
+this page. After loading the tree, it opens an interactive representation.
+Press <kbd>F1</kbd> or the help button in the viewer for instructions.
+You can use the generated url as a permanent link to your data, that you
+can use for sharing your images.</p>
 
 <div id="div_login">
   <div>
@@ -24,41 +48,76 @@
   </div>
 
   <div>
-  <button id="button_login">Login</button>
+  <button id="button_login">Log in</button>
+  <button id="button_guest">Access as guest</button>
   </div>
 </div>
 
 <div id="div_upload">
   <div>
-  <label for="input_name">Name (1 to 128 characters)</label><br>
-  <input type="text" id="input_name" required
-    placeholder="Tree name" minlength="1" maxlength="128" size="20">
-  </div>
-
-  <div>
-  <label for="input_description">Description</label><br>
-  <textarea id="input_description" rows="4" cols="50"
-    placeholder="Description of the tree (can be empty)"></textarea>
-  </div>
-
-  <div>
-  <input type="radio" id="radio_file" name="newick" value="file">
-  <label for="radio_file">Newick file</label><br>
-  <input id="input_newick_file" type="file"
-    accept=".tree,.newick,.nw,.tre,.txt" disabled>
-  </div>
-
-  <div>
   <input type="radio" id="radio_string" name="newick" value="string">
-  <label for="radio_string">Newick string</label><br>
-  <textarea id="input_newick_string" rows="4" cols="50"
+  <label for="radio_string">To paste your tree (or
+    <a href="#" onclick="load_example(); return false;">load an
+    example</a>):</label><br>
+  <textarea id="input_newick_string" rows="8" cols="80"
     placeholder="Newick representation of the tree" disabled></textarea>
   </div>
 
   <div>
-  <button id="button_upload">Upload</button>
+  <input type="radio" id="radio_file" name="newick" value="file">
+  <label for="radio_file">Or upload a file: </label>
+  <input id="input_trees_file" type="file"
+    accept=".tree,.newick,.nw,.tre,.nex,.nxs,.txt,.gz" disabled>
+  </div>
+
+  <div>
+  <input type="checkbox" id="check_metadata" name="metadata">
+  <label for="check_metadata">Add metadata</label>
+  </div>
+
+  <div id="div_metadata">
+    <div>
+    <label for="input_name">Name (1 to 128 characters)</label><br>
+    <input type="text" id="input_name"
+      placeholder="Tree name" minlength="1" maxlength="128" size="20">
+    </div>
+
+    <div>
+    <label for="input_description">Description</label><br>
+    <textarea id="input_description" rows="4" cols="60"
+      placeholder="Description of the tree (can be empty)"></textarea>
+    </div>
+  </div>
+
+  <p></p>
+
+  <div>
+  <button id="button_upload">View tree</button>
   </div>
 </div>
+
+<div id="div_info"></div>
+
+</div>
+
+<footer>
+<div class="centered">
+
+<p>
+<img src="icon.png" alt="ETE Toolkit logo">
+Tree Explorer is part of the
+<a href="http://etetoolkit.org/">ETE Toolkit</a>.
+</p>
+
+<p>
+<img src="https://chanzuckerberg.com/wp-content/themes/czi/img/logo.svg"
+     width="50" alt="Chan Zuckerberg Initiative logo">
+Smart visualization of huge trees funded by the
+<a href="https://chanzuckerberg.com/">Chan Zuckerberg Initiative</a>.
+</p>
+
+</div>
+</footer>
 
 </body>
 </html>

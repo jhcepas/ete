@@ -1,16 +1,62 @@
-h1 {
-    text-align: center;
-    color: blue;
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
 }
 
-#div_info {
-    text-align: center;
+.centered {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1em;
+}
+
+h1 {
+    font-size: 2em;
+    font-family: Helvetica, sans-serif;
+    font-weight: 200;
+}
+
+h1, p {
+    color: #333;
 }
 
 div {
-    margin: 2rem 2rem;
+    margin: 0.5rem 0.2rem;
+}
+
+#div_info {
+    text-align: right;
 }
 
 input, label, textarea {
     margin: 0.4rem 0;
+}
+
+footer {
+    flex: 1;
+    margin: 2em 0 0 0;
+    padding: 2em 0 0 0;
+
+    background-color: #EEE;
+    font-size: 0.9em;
+}
+
+kbd {  /* from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/kbd */
+    background-color: #eee;
+    border-radius: 3px;
+    border: 1px solid #b4b4b4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .2),
+                0 2px 0 0 rgba(255, 255, 255, .7) inset;
+    color: #333;
+    display: inline-block;
+    font-size: .85em;
+    font-weight: 700;
+    line-height: 1;
+    padding: 2px 4px;
+    white-space: nowrap;
+}
+
+
+#div_login, #div_upload {
+    display: none;  /* do not show the divs until we know which one to show */
 }
