@@ -44,8 +44,8 @@ const view = {
 
     // representation
     shape: "rectangular",  // default shape
-    min_size: 20,  // for less pixels, we will outine things
-    min_size_content: 4,  // for less pixels, node contents won't be drawn
+    node_height_min: 30,  // for less pixels, we will collapse nodes
+    content_height_min: 4,  // for less pixels, node contents won't be drawn
     rmin: 0,
     angle: {min: -180, max: 180},
     align_bar: 80,  // % of the screen width where the aligned panel starts
@@ -81,32 +81,33 @@ const view = {
     select_text: false,  // if true, clicking and moving the mouse selects text
 
     // style
+    default_rules: null,  // will contain an array of the original css rules
     node: {
         box: {
             opacity: 1,
-            color: "#FFF",
+            fill: "#FFF",
         },
         dot: {
-            radius: 1,
+            shape: "circle",
+            radius: 2,
             opacity: 0.5,
-            color: "#00F",
+            fill: "#00F",
         },
     },
-    outline: {
+    collapsed: {
+        shape: "skeleton",
         opacity: 0.1,
-        color: "#A50",
-        width: 0.4,
+        stroke: "#A50",
+        "stroke-width": 0.4,
     },
-    line: {
-        length: {
-            color: "#000",
-            width: 0.5,
-        },
-        children: {
-            color: "#000",
-            width: 0.5,
-            pattern: "solid",
-        },
+    hz_line: {
+        stroke: "#000",
+        "stroke-width": 0.5,
+    },
+    vt_line: {
+        stroke: "#000",
+        "stroke-width": 0.5,
+        pattern: "solid",
     },
     array: {padding: 0.0},
     font_sizes: {auto: true, scroller: undefined, fixed: 10},
@@ -129,12 +130,12 @@ const view = {
 
 const menus = {  // will contain the menus on the top
     pane: undefined,  // main pane containing the tabs
-    layouts: undefined,
-    labels: undefined,
-    node_properties: undefined,
-    collapsed: undefined,
-    selections: undefined,
-    searches: undefined,
+    layouts: undefined,  // to show the available layouts (and (de)activate them)
+    labels: undefined,  // see labels.js
+    node_properties: undefined,  // for labels based on properties (see below)
+    collapsed: undefined,  // for manually collapsed nodes (see collapse.js)
+    selections: undefined,  // see tag.js
+    searches: undefined,  // see search.js
 };
 
 const trees = {};  // will translate names to ids (trees[tree_name] = tree_id)
@@ -142,6 +143,8 @@ const trees = {};  // will translate names to ids (trees[tree_name] = tree_id)
 
 async function main() {
     try {
+        save_default_rules();
+
         await init_trees();
 
         await set_query_string_values();
@@ -173,6 +176,17 @@ async function main() {
     catch (ex) {
         Swal.fire({html: ex.message, icon: "error"});
     }
+}
+
+
+// Save the CSS rules from the main stylesheet, to be able to restore later.
+function save_default_rules() {
+    if (view.default_rules)
+        return;  // default css rules already saved!
+
+    const rules = document.styleSheets[0].cssRules;
+    view.default_rules = Array.from(rules).map(r => r.cssText);
+    view.default_rules.reverse();  // so we can easily insert them later
 }
 
 
@@ -210,43 +224,112 @@ function get_tid() {
 
 // Set some style values according to the active layouts.
 async function set_tree_style() {
+    // Find the active layouts and request their combined tree style.
     const active = JSON.stringify(Object.entries(view.layouts)
         .filter( ([name, status]) => status["active"] )
         .map( ([name, status]) => name ));
 
     const qs = new URLSearchParams({"active": active}).toString();
 
-    const style = await api(`/trees/${get_tid()}/style?${qs}`);
+    const style = await api(`/trees/${get_tid()}/style?${qs}`);  // ask backend
+
+    // We set the defaults first, and then override with the server's response.
 
     // Set rectangular or circular shape.
-    if (style.shape)
+    view.shape = "rectangular";
+    if ("shape" in style) {
+        if (! ["rectangular", "circular"].includes(style.shape))
+            throw new Error(`unknown shape "${style.shape}"`);
         view.shape = style.shape;
+    }
 
-    // Set collapsing sizes.
-    if (style["min-size"])
-        view.min_size = style["min-size"];
+    // Set collapse and visualize sizes.
+    view.node_height_min = 30;
+    if ("node-height-min" in style)
+        view.node_height_min = style["node-height-min"];
 
-    if (style["min-size-content"])
-        view.min_size_content = style["min-size-content"];
+    view.content_height_min = 4;
+    if ("content-height-min" in style)
+        view.content_height_min = style["content-height-min"];
+
+    // Set limits.
+    view.rmin = 0;
+    if ("radius" in style)
+        view.rmin = style.radius;
+
+    view.angle.min = -180;
+    if ("angle-start" in style)
+        view.angle.min = style["angle-start"];
+
+    view.angle.max = 180;
+    if ("angle-end" in style)
+        view.angle.max = style["angle-end"];
+
+    if ("angle-span" in style)
+        if ("angle-start" in style)
+            view.angle.max = view.angle.min + style["angle-span"];
+        else
+            view.angle.min = view.angle.max - style["angle-span"];
+
+    // Get special (non-css) styles first and remove them.
+    view.node.dot.shape = "circle";
+    view.node.dot.radius = 2;
+    if ("dot" in style) {
+        const shape = style.dot.shape;
+        if (shape !== undefined) {
+            if (! (typeof shape === "number") &&
+                ! ["none", "circle", "triangle", "square", "pentagon",
+                   "hexagon", "heptagon", "octogon"].includes(shape))
+                throw new Error(`unknown dot shape ${shape}`);
+            view.node.dot.shape = shape;
+            delete style.dot.shape;  // so we don't use it later
+        }
+
+        const radius = style.dot.radius;
+        if (radius !== undefined) {
+            view.node.dot.radius = radius;
+            delete style.dot.radius;  // so we don't use it later
+        }
+    }
+
+    view.collapsed.shape = "skeleton";
+    if ("collapsed" in style && "shape" in style.collapsed) {
+        if (! ["skeleton", "outline"].includes(style.collapsed.shape))
+            throw new Error(`unknown collapsed shape "${style.collapsed.shape}"`);
+        view.collapsed.shape = style.collapsed.shape;
+        delete style.collapsed.shape;  // so we don't use it later
+    }
 
     // Update styles for general node graphical elements.
-    for (const [name, pos] of
-             [["box", 7], ["dot", 4], ["hz-line", 2], ["vt-line", 3]]) {
-        // Position pos based on the order in which they appear in gui.css.
-        if (style[name]) {
+    while (document.styleSheets[0].cssRules.length > 0)
+        document.styleSheets[0].deleteRule(0);
+    view.default_rules.forEach(r => document.styleSheets[0].insertRule(r));
+    // Iterate over name of elements whose style we can change, their position
+    // pos in CSS rules (in gui.css), and the global variable that tracks them.
+    for (const [name, pos, gvar] of
+             [["box", 7, view.node.box],
+              ["collapsed", 8, view.collapsed],
+              ["dot", 4, view.node.dot],
+              ["hz-line", 2, view.hz_line],
+              ["vt-line", 3, view.vt_line]]) {
+        if (name in style) {
+            // Update global variables (exposed in the menus).
+            Object.entries(style[name]).forEach( ([k, v]) => gvar[k] = v );
+
+            // Update CSS rules.
             document.styleSheets[0].cssRules[pos].style.cssText +=
-                Object.entries(style[name]).map(([k, v]) => `${k}: ${v}`)
+                Object.entries(style[name]).map( ([k, v]) => `${k}: ${v}` )
                 .join("; ");
         }
     }
 
-    if (style["aliases"]) {
+    if ("aliases" in style) {
         // Add new stylesheet with all the ns_* names for the styles.
         // They will be used when elements with those styles appear in draw.js
         const sheet = new CSSStyleSheet();
         for (const name in style["aliases"]) {
             const block = Object.entries(style["aliases"][name])
-                .map(([prop, value]) => `${prop}: ${value}`).join("; ");
+                .map( ([prop, value]) => `${prop}: ${value}` ).join("; ");
             sheet.insertRule(`.ns_${name} { ${block} }`);
         }
         document.adoptedStyleSheets = [sheet];
@@ -267,9 +350,9 @@ async function populate_layouts() {
     // Get list of existing layouts for the current tree and populate the menu.
     const layouts = await api(`/trees/${get_tid()}/layouts`);
 
-    for (const layout of layouts) {
-        view.layouts[layout] = {active: true};
-        menus.layouts.addBinding(view.layouts[layout], "active", {label: layout})
+    for (const name in layouts) {
+        view.layouts[name] = {active: layouts[name]["active"]};
+        menus.layouts.addBinding(view.layouts[name], "active", {label: name})
             .on("change", async () => {
                 await set_tree_style();
                 update();
@@ -309,8 +392,9 @@ async function on_tree_change() {
     remove_collapsed();
     remove_tags();
     view.tree_size = await api(`/trees/${get_tid()}/size`);
-    store_node_properties();
+    await set_tree_style();
     reset_node_count();
+    store_node_properties();
     reset_zoom();
     reset_position();
     await populate_layouts();
@@ -455,15 +539,23 @@ function reset_position(reset_x=true, reset_y=true) {
             view.tl.y = -0.05 * div_tree.offsetHeight / view.zoom.y;
     }
     else if (view.shape === "circular") {
-        if (!(view.angle.min === -180 && view.angle.max === 180)) {
-            view.angle.min = -180;
-            view.angle.max = 180;
-            view.minimap.uptodate = false;
-        }
         if (reset_x)
             view.tl.x = -div_tree.offsetWidth / view.zoom.x / 2;
         if (reset_y)
             view.tl.y = -div_tree.offsetHeight / view.zoom.y / 2;
+    }
+}
+
+
+// Basically rmin, amin, amax (only used for circular representation).
+function reset_limits() {
+    if (view.shape === "circular") {
+        if (!(view.angle.min === -180 && view.angle.max === 180)) {
+            view.rmin = 0;
+            view.angle.min = -180;
+            view.angle.max = 180;
+            view.minimap.uptodate = false;
+        }
     }
 }
 

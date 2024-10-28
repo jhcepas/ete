@@ -36,13 +36,15 @@ def draw_hz_line(p1, p2, parent_of=None, style=''):
 def draw_vt_line(p1, p2, style=''):
     return ['vt-line', p1, p2, style]
 
-def draw_nodedot(point, style=''):
-    return ['nodedot', point, style]
+def draw_nodedot(point, dy_max, style=''):
+    return ['nodedot', point, dy_max, style]
 
-# An outline has the information to draw an approximate representation
-# of the interior of collapsed nodes.
-def draw_outline(points):
-    return ['outline', points]
+# Information to draw an approximate representation of collapsed nodes.
+def draw_skeleton(points):
+    return ['skeleton', points]
+
+def draw_outline(box):
+    return ['outline', box]
 
 
 # Other (drawing) commands.
@@ -70,6 +72,9 @@ def draw_text(box, anchor, text, fs_max=None, style=''):
 def draw_array(box, a):
     return ['array', box, a]
 
+def draw_seq(box, seq, draw_text=True, fs_max=None, style=''):
+    return ['seq', box, seq, draw_text, fs_max, style]
+
 
 # Other (non-drawing) commands.
 
@@ -92,14 +97,14 @@ def draw_group(elements, circular, shift):
 
     for element in elements:
         eid = element[0]  # "element identifier" (name of drawing element)
-        if eid in ['nodebox', 'array', 'text']:
+        if eid in ['nodebox', 'array', 'seq', 'text']:
             # The position for these elements is given by a box.
             x, y, dx, dy = element[1]
             box = x0 + x, y0 + y, dx, dy
             if not circular or are_valid_angles(y0 + y, y0 + y + dy):
                 yield [eid, box] + element[2:]
-        elif eid == 'outline':
-            # The points given in the outline can be (x,y) or (r,a).
+        elif eid == 'collapsed':
+            # The points given as collapsed skeleton can be (x,y) or (r,a).
             points = [(x0 + x, y0 + y) for x, y in element[1]
                       if not circular or are_valid_angles(y0 + y)]
             yield [eid, points]

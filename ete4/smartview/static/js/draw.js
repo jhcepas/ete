@@ -9,7 +9,7 @@ import { colorize_tags } from "./tag.js";
 import { colorize_labels } from "./label.js";
 import { api } from "./api.js";
 
-export { update, draw_tree, draw, get_class_name };
+export { update, draw_tree, draw, get_class_name, get_items_per_panel };
 
 
 // Update the view of all elements (gui, tree, minimap).
@@ -122,8 +122,10 @@ function build_draw_query_string() {
 
     const params_rect = {  // parameters we have to pass to the drawer
         "shape": view.shape,
-        "min_size": view.min_size, "min_size_content": view.min_size_content,
+        "node_height_min": view.node_height_min,
+        "content_height_min": view.content_height_min,
         "zx": zx, "zy": zy, "x": x, "y": y, "w": w, "h": h,
+        "collapsed_shape": view.collapsed.shape,
         "collapsed_ids": JSON.stringify(Object.keys(view.collapsed_ids)),
         "layouts": layouts,
         "labels": labels,
@@ -234,7 +236,11 @@ function draw_negative_xaxis() {
 function draw(element, items, tl, zoom, replace=true) {
     const g = create_svg_element("g");
 
-    items.forEach(item => g.appendChild(create_item(item, tl, zoom)));
+    items.forEach(item => {
+        const svg = create_item(item, tl, zoom);
+        if (svg !== null)
+            g.appendChild(svg);
+    });
 
     put_nodes_in_background(g);
 
@@ -309,10 +315,10 @@ function create_item(item, tl, zoom) {
         return b;
     }
     else if (item[0] === "nodedot") {
-        const [ , point, style] = item;
+        const [ , point, dy_max, style] = item;
 
         const styles = ["nodedot", add_ns_prefix(style)];
-        return create_circle(point, view.node.dot.radius, tl, zx, zy, styles);
+        return create_dot(point, dy_max, tl, zx, zy, styles);
     }
     else if (item[0] === "hz-line") {
         const [ , p1, p2, parent_of, style] = item;
@@ -330,10 +336,15 @@ function create_item(item, tl, zoom) {
             create_line(p1, p2, tl, zx, zy, styles) :
             create_arc(p1, p2, tl, zx, styles);
     }
-    else if (item[0] === "outline") {
+    else if (item[0] === "skeleton") {
         const [ , points] = item;
 
-        return create_outline(points, tl, zx, zy);
+        return create_skeleton(points, tl, zx, zy);
+    }
+    else if (item[0] === "outline") {
+        const [ , box] = item;
+
+        return create_outline(box, tl, zx, zy);
     }
     else if (item[0] === "line") {
         const [ , p1, p2, style] = item;
@@ -372,7 +383,7 @@ function create_item(item, tl, zoom) {
     else if (item[0] === "array") {
         const [ , box, array] = item;
         const [x0, y0, dx0, dy0] = box;
-        const dx = dx0 / array.length / zx;
+        const dx = dx0 / array.length;
 
         const [y, dy] = pad(y0, dy0, view.array.padding);
 
@@ -383,6 +394,35 @@ function create_item(item, tl, zoom) {
                 create_asec([x, y, dx, dy], tl, zx);
             r.style.fill = `hsl(${array[i]}, 100%, 50%)`;
             g.appendChild(r);
+        }
+
+        return g;
+    }
+    else if (item[0] === "seq") {
+        const [ , box, seq, draw_text, fs_max, style] = item;
+        const [x0, y0, dx0, dy0] = box;
+        const dx = dx0 / seq.length;
+
+        const [y, dy] = pad(y0, dy0, view.array.padding);
+
+        const g = create_svg_element("g");
+        for (let i = 0, x = x0; i < seq.length; i++, x+=dx) {
+            const r = view.shape === "rectangular" ?
+                create_rect([x, y, dx, dy], tl, zx, zy) :
+                create_asec([x, y, dx, dy], tl, zx);
+
+            const code = (seq.charCodeAt(i) - 65) * 9;  // 'A' -> 65, and 26 letters vs 256 hs
+            r.style.fill = `hsl(${code}, 100%, 50%)`;
+            // TODO: maybe select colors following some "standards" like:
+            // https://acces.ens-lyon.fr/biotic/rastop/help/colour.htm
+            // https://www.dnastar.com/manuals/MegAlignPro/17.2/en/topic/change-the-analysis-view-color-scheme
+            // http://yulab-smu.top/ggmsa/articles/guides/Color_schemes_And_Font_Families.html
+
+            g.appendChild(r);
+
+            if (draw_text)
+                g.appendChild(create_text([x, y, dx, dy], [0.5, 0.5],
+                                          seq[i], fs_max, tl, zx, zy));
         }
 
         return g;
@@ -470,29 +510,46 @@ function create_asec(box, tl, z, style="") {
 }
 
 
-// Return an outline (collapsed version of a box).
-function create_outline(points, tl, zx, zy) {
-    if (view.shape === "rectangular")
-        return create_rect_outline(points, tl, zx, zy);
+// Return a nodedot.
+function create_dot(point, dy_max, tl, zx, zy, styles) {
+    const shape = pop_style(styles, "shape") || view.node.dot.shape;
+    if (shape === "none")
+        return null;
+
+    // Radius of the dot in pixels.
+    const r_max = zy * dy_max * (view.shape === "circular" ? point[0] : 1);
+    const r = Math.min(r_max, pop_style(styles, "radius") || view.node.dot.radius);
+
+    if (shape === "circle")
+        return create_circle(point, r, tl, zx, zy, styles);
     else
-        return create_circ_outline(points, tl, zx);
+        return create_polygon(shape, point, r, tl, zx, zy, styles);
 }
 
 
-// Return a svg horizontal outline.
-function create_rect_outline(points, tl, zx, zy) {
+// Return a shape summarizing collapsed nodes (skeleton).
+function create_skeleton(points, tl, zx, zy) {
+    if (view.shape === "rectangular")
+        return create_rect_skeleton(points, tl, zx, zy);
+    else
+        return create_circ_skeleton(points, tl, zx);
+}
+
+
+// Return a svg horizontal approximation to the collapsed nodes.
+function create_rect_skeleton(points, tl, zx, zy) {
     const ps = points.map(p => tree2rect(p, tl, zx, zy));
 
     return create_svg_element("path", {
-        "class": "outline",
+        "class": "collapsed",
         "d": (`M ${ps[0].x} ${ps[0].y} ` +
               ps.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')),
     });
 }
 
 
-// Return a svg outline in the direction of an annular sector.
-function create_circ_outline(points, tl, z) {
+// Return a svg collapsed representation in the direction of an annular sector.
+function create_circ_skeleton(points, tl, z) {
     const das = [];  // list of angle differences
     for (let i = 1; i < points.length; i++)
         das.push(points[i][1] - points[i-1][1]);
@@ -510,9 +567,59 @@ function create_circ_outline(points, tl, z) {
     }
 
     return create_svg_element("path", {
-        "class": "outline",
+        "class": "collapsed",
         "d": (`M ${ps[0].x} ${ps[0].y} ` +
               ps.slice(1).map(arc).join(' ')),
+    });
+}
+
+
+// Return an outline (collapsed version of a box).
+function create_outline(box, tl, zx, zy) {
+    if (view.shape === "rectangular")
+        return create_rect_outline(box, tl, zx, zy);
+    else
+        return create_circ_outline(box, tl, zx);
+}
+
+
+// Return a svg horizontal outline.
+function create_rect_outline(box, tl, zx, zy) {
+    const [x, y, dx, dy] = box;
+
+    const p0 = tree2rect([x, y + dy/2], tl, zx, zy),
+          p10 = tree2rect([x + dx, y], tl, zx, zy),
+          p11 = tree2rect([x + dx, y + dy], tl, zx, zy);
+
+    return create_svg_element("path", {
+        "class": "collapsed",
+        "d": `M ${p0.x} ${p0.y}
+              L ${p10.x} ${p10.y}
+              L ${p11.x} ${p11.y}
+              L ${p0.x} ${p0.y}`,
+    });
+    // NOTE: Symmetrical to create_circ_outline(). Otherwise, we could just do:
+    //   create_svg_element("polygon", {
+    //       "points": [p0, p10, p11].map(p => `${p.x},${p.y}`).join(" "),
+    //   });
+}
+
+
+// Return a svg outline in the direction of an annular sector.
+function create_circ_outline(box, tl, z) {
+    const [r, a, dr, da] = box;
+
+    const large = da > Math.PI ? 1 : 0;
+    const p0 = tree2circ([r, a + da/2], tl, z),
+          p10 = tree2circ([r + dr, a], tl, z),
+          p11 = tree2circ([r + dr, a + da], tl, z);
+
+    return create_svg_element("path", {
+        "class": "collapsed",
+        "d": `M ${p0.x} ${p0.y}
+              L ${p10.x} ${p10.y}
+              A ${z * (r + dr)} ${z * (r + dr)} 0 ${large} 1 ${p11.x} ${p11.y}
+              L ${p0.x} ${p0.y}`,
     });
 }
 
@@ -575,6 +682,50 @@ function create_circle(center, radius, tl, zx, zy, style="") {
         "cy": c.y,
         "r": radius,
     });
+
+    add_style(element, style);
+
+    return element;
+}
+
+
+// Create a polygon.
+function create_polygon(name, center, r, tl, zx, zy, style="") {
+    const n = typeof name === "number" ? name :
+          {"triangle": 3,
+           "square":   4,
+           "pentagon": 5,
+           "hexagon":  6,
+           "heptagon": 7,
+           "octogon":  8}[name];
+
+    if (n === undefined)
+        throw new Error(`unknown dot shape ${name}`);
+
+    const c = view.shape === "rectangular" ?  // center point in screen coords
+        tree2rect(center, tl, zx, zy) :
+        tree2circ(center, tl, zx);
+
+    const s = 2 * r * Math.tan(Math.PI / n);  // side length
+    let p = {x: c.x - s/2,  // starting point
+             y: c.y + r};
+
+    const ps = [p];  // polygon points, adding a rotated (s, 0)
+    for (let i = 0; i < n - 1; i++) {
+        p = {x: p.x + s * Math.cos(i * 2 * Math.PI / n),
+             y: p.y - s * Math.sin(i * 2 * Math.PI / n)}
+        ps.push(p);
+    }
+
+    const element = create_svg_element("polygon", {
+        "points": ps.map(p => `${p.x},${p.y}`).join(" "),
+    });
+
+    if (view.shape === "circular") {
+        const angle = 180 / Math.PI * Math.atan2(zy * tl.y + c.y,
+                                                 zx * tl.x + c.x);
+        add_rotation(element, angle, c.x, c.y);
+    }
 
     add_style(element, style);
 
@@ -664,19 +815,42 @@ function add_ns_prefix(style) {
 
 // Add to the given element a style. It can be a string with class name(s),
 // an object with the individual properties to set, or a list of styles.
-function add_style(element, style) {
+function add_style(element, style, exclude=["shape", "radius"]) {
     if (typeof style === "string") {  // string with class name(s).
-        for (const name of style.split(" ").filter(x => x)) { // nonempty names
+        for (const name of style.split(" ").filter(x => x)) {  // nonempty names
             element.classList.add(name);
         }
     }
     else if (style.length === undefined) {  // object with individual properties
         for (const [prop, value] of Object.entries(style)) {
-            element.style[prop] = value;
+            if (!exclude.includes(prop))
+                element.style[prop] = value;
         }
     }
     else {  // list of styles to combine
-        style.forEach(s => add_style(element, s));
+        style.forEach(s => add_style(element, s, exclude));
+    }
+}
+
+
+// Return the value in style associated with the given property prop,
+// and remove it from the style,
+function pop_style(style, prop) {
+    if (typeof style === "string") {  // string with class name(s).
+        return undefined;
+    }
+    else if (style.length === undefined) {  // object with individual properties
+        const value = style[prop];
+        delete style[prop];  // remove it from the style if it is there
+        return value;  // possibly undefined
+    }
+    else {  // list of styles to combine
+        for (let s of style) {
+            const value = pop_style(s, prop);
+            if (value !== undefined)
+                return value;
+        }
+        return undefined;
     }
 }
 

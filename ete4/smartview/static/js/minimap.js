@@ -1,7 +1,7 @@
 // Minimap-related functions.
 
 import { view, get_tid } from "./gui.js";
-import { draw, update } from "./draw.js";
+import { draw, update, get_items_per_panel } from "./draw.js";
 import { api } from "./api.js";
 
 export { draw_minimap, update_minimap_visible_rect, move_minimap_view };
@@ -23,7 +23,8 @@ async function draw_minimap() {
         qs += `&shape=circular&rmin=${view.rmin}` +
               `&amin=${view.angle.min}&amax=${view.angle.max}`;
 
-    const items = await api(`/trees/${get_tid()}/draw?${qs}`);
+    const commands = await api(`/trees/${get_tid()}/draw?${qs}`);
+    const [items_per_panel, ] = get_items_per_panel(commands)
 
     const mbw = 3;  // border-width from .minimap css
     const offset = -(div_minimap.offsetWidth - 2*mbw) / view.minimap.zoom.x / 2;
@@ -31,7 +32,7 @@ async function draw_minimap() {
         {x: 0, y: 0} :
         {x: offset, y: offset};
 
-    draw(div_minimap, items, tl, view.minimap.zoom);
+    draw(div_minimap, items_per_panel[0], tl, view.minimap.zoom);
 
     remove_nodeboxes();  // we don't want to select or highlight nodes here
     remove_nodedots();  // nor the dots

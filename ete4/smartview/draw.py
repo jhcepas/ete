@@ -6,25 +6,41 @@ from math import sin, cos, pi, sqrt, atan2
 
 from ..core import operations as ops
 from .coordinates import Size, Box, make_box, get_xs, get_ys
-from .layout import Decoration, Label
+from .layout import Decoration, Label, update_style
 from .faces import EvalTextFace
 from . import graphics as gr
 
 
-def draw(tree, shape, layouts=None, labels=None, viewport=None,
-         zoom=(1, 1), limits=None, collapsed_ids=None, searches=None,
-         include_props=None, exclude_props=None, is_leaf_fn=None,
-         min_size=10, min_size_content=5):
+def draw(tree, layouts, overrides=None, labels=None,
+         viewport=None, zoom=(1, 1), collapsed_ids=None, searches=None):
     """Yield graphic commands to draw the tree."""
+    style = {}  # tree style
+    decos = []  # tree decorations
+
+    # Merge the style from all layouts, and get all decorations.
+    for layout in layouts:
+        for element in layout.draw_tree(tree):
+            if type(element) is dict:
+                update_style(style, element)
+            else:
+                decos.append(element)
+
+    # NOTE: No need to susbstitute aliased values for their "aliases"
+    # style, as opposed to the /style endpoint in explorer.py.
+    # Those tree styles are applied (via gui.js) through css manipulation.
+
+    # Override tree style (with options that normally come from the gui).
+    style.update(overrides)
+
+    # TODO: Draw the decos.
+
     drawer_class = {'rectangular': DrawerRect,
-                    'circular': DrawerCirc}[shape]
+                    'circular':    DrawerCirc}[style['shape']]
 
-    drawer_obj = drawer_class(tree, layouts, labels, viewport,
-                              zoom, limits, collapsed_ids, searches,
-                              include_props, exclude_props, is_leaf_fn)
+    draw_node_fns = [layout.draw_node for layout in layouts]
 
-    drawer_obj.MIN_SIZE = min_size
-    drawer_obj.MIN_SIZE_CONTENT = min_size_content
+    drawer_obj = drawer_class(tree, style, draw_node_fns, labels,
+                              viewport, zoom, collapsed_ids, searches)
 
     yield from drawer_obj.draw()
 
@@ -32,23 +48,27 @@ def draw(tree, shape, layouts=None, labels=None, viewport=None,
 class Drawer:
     """Base class (needs subclassing with extra functions to draw)."""
 
-    MIN_SIZE = 10  # anything that has less pixels will be outlined
-    MIN_SIZE_CONTENT = 5  # any content with less pixels won't be shown
-
-    def __init__(self, tree, layouts=None, labels=None, viewport=None,
-                 zoom=(1, 1), limits=None, collapsed_ids=None, searches=None,
-                 include_props=None, exclude_props=None, is_leaf_fn=None):
+    def __init__(self, tree, tree_style=None, draw_node_fns=None, labels=None,
+                 viewport=None, zoom=(1, 1), collapsed_ids=None, searches=None):
         self.tree = tree
-        self.layouts = layouts or []
+        self.tree_style = tree_style or {}
+        self.draw_node_fns = draw_node_fns or []
         self.labels = [read_label(label) for label in (labels or [])]
         self.viewport = Box(*viewport) if viewport else None
         self.zoom = zoom
-        self.xmin, self.xmax, self.ymin, self.ymax = limits or (0, 0, 0, 0)
         self.collapsed_ids = collapsed_ids or set()  # manually collapsed
         self.searches = searches or {}  # looks like {text: (results, parents)}
-        self.include_props = include_props  # properties included in tooltips
-        self.exclude_props = exclude_props  # properties excluded in tooltips
-        self.is_leaf_fn = is_leaf_fn  # function used to manually collapse
+
+        # Get some useful constants from the tree style.
+
+        # Any node that has less pixels will be collapsed.
+        self.node_height_min = self.tree_style.get('node-height-min', 10)
+
+        # Any content with less pixels won't be shown.
+        self.content_height_min = self.tree_style.get('content-height-min', 5)
+
+        # xmin, ymin, ymax used only for the circular mode for the moment.
+        self.xmin, self.ymin, self.ymax = 0, 0, 0
 
     def draw(self):
         """Yield commands to draw the tree."""
@@ -92,8 +112,9 @@ class Drawer:
             return x, y + box_node.dy
 
         # Deal with collapsed nodes.
+        is_leaf_fn = self.tree_style.get('is-leaf-fn')
         is_collapsed = (it.node_id in self.collapsed_ids or
-                        self.is_leaf_fn and self.is_leaf_fn(it.node))
+                        is_leaf_fn and is_leaf_fn(it.node))
 
         if self.collapsed and (is_collapsed or not self.is_small(self.outline)):
             graphics += self.flush_collapsed()  # don't stack more collapsed
@@ -193,15 +214,15 @@ class Drawer:
         # Draw a dot on the node tip.
         dot_center = (x + dx, y + bdy)
         if self.is_visible(make_box(dot_center, (0, 0))):
-            commands.append(gr.draw_nodedot(dot_center,
+            commands.append(gr.draw_nodedot(dot_center, dy_max=min(bdy, dy-bdy),
                                             style=style.get('dot', '')))
 
         return style, commands + node_commands, xmax
 
     def flush_collapsed(self):
-        """Yield outline representation and graphics from collapsed nodes."""
-        # This includes the shape of the outline and the representation of the
-        # collapsed nodes, and empties self.outline and self.collapsed.
+        """Yield representation and graphics from collapsed nodes."""
+        # This includes all the graphics for representing the collapsed nodes,
+        # and empties self.outline and self.collapsed.
         result_of = [text for text,(results,parents) in self.searches.items()
             if any(node in results or node in parents
                    for node in self.collapsed)]
@@ -212,7 +233,7 @@ class Drawer:
         uncollapse = len(self.collapsed) == 1 and node0.is_leaf  # single leaf?
 
         if not uncollapse:  # normal case: we represent the collapsed nodes
-            graphics += self.draw_outline()  # it updates self.bdy_dys too
+            graphics += self.draw_collapsed()  # it updates self.bdy_dys too
 
             style, collapsed_graphics, xmax = self.draw_nodes(
                 self.collapsed, self.outline, self.outline.dy / 2)
@@ -244,29 +265,43 @@ class Drawer:
 
         yield from graphics
 
-    def draw_outline(self, *args, **kwargs):
-        """Yield outline with all the skeleton points."""
+    def draw_collapsed(self, *args, **kwargs):
+        """Yield collapsed nodes representation."""
         # This is the shape of the outline. It also updates self.bdy_dys.
         x, y, dx, dy = self.outline
         _, zy = self.zoom
 
-        points = points_from_nodes(self.collapsed, (x, y),
-                                   self.MIN_SIZE_CONTENT/zy,
-                                   *args, **kwargs)  # for subclasses
+        shape = self.tree_style.get('collapsed-shape', 'skeleton')
 
-        y1 = points[-1][1]  # last point's y (it is at branch position)
-        self.bdy_dys[-1].append( (y1 - y, dy) )
+        if shape == 'skeleton':
+            points = points_from_nodes(self.collapsed, (x, y),
+                                       self.content_height_min/zy,
+                                       *args, **kwargs)  # for subclasses
 
-        yield gr.draw_outline(points)
+            y1 = points[-1][1]  # last point's y (it is at branch position)
+            self.bdy_dys[-1].append( (y1 - y, dy) )
+
+            yield gr.draw_skeleton(points)
+        elif shape == 'outline':
+            self.bdy_dys[-1].append( (dy/2, dy) )
+
+            yield gr.draw_outline(self.outline)
+        else:
+            raise ValueError(f'unrecognized collapsed shape: {shape!r}')
 
     def get_nodeprops(self, node):
         """Return the node properties that we want to show with the nodebox."""
-        included = (self.include_props if self.include_props is not None
-                    else node.props.keys())  # included properties
-        excluded = self.exclude_props or []  # excluded properties
+        style = self.tree_style  # shortcut
 
-        return {k: str(node.props[k]) for k in included
-                    if k in node.props and k not in excluded}
+        # Not present? use defaults; None? use all; else, use whatever they are.
+        shown = (style['show-popup-props'] if 'show-popup-props' in style else
+                 ['dist', 'support'])  # defaults
+        shown = shown if shown is not None else node.props.keys()
+
+        hidden = style.get('hide-popup-props') or []  # nothing special for None
+
+        return {k: str(node.props[k]) for k in shown
+                    if k in node.props and k not in hidden}
         # NOTE: So the properties appear in the order given in included.
 
     def draw_nodes(self, nodes, box, bdy, circular):  # bdy: branch dy (height)
@@ -274,9 +309,10 @@ class Drawer:
         style = {}  # style
         decos = []  # decorations
 
-        # Add style and decorations from layouts.
-        for layout in self.layouts:
-            for element in layout.draw_node(nodes[0], tuple(self.collapsed)):
+        # Add style and decorations from draw_node_fns (from layouts).
+        for draw_node in self.draw_node_fns:
+            for element in draw_node(nodes[0], tuple(self.collapsed)):
+                # NOTE: draw_node() is cached: tuple(...) works (can be hashed).
                 if type(element) is dict:
                     style.update(element)
                 else:
@@ -289,7 +325,7 @@ class Drawer:
 
         # Get the graphic commands, and xmax, from applying the decorations.
         commands, xmax = draw_decorations(decos, nodes, self.xmin, box, bdy,
-                                          self.zoom, self.MIN_SIZE_CONTENT,
+                                          self.zoom, self.content_height_min,
                                           collapsed=self.collapsed,
                                           circular=circular)
 
@@ -320,12 +356,10 @@ def read_label(label):
 class DrawerRect(Drawer):
     """Drawer for a rectangular representation."""
 
-    def __init__(self, tree, layouts=None, labels=None, viewport=None,
-                 zoom=(1, 1), limits=None, collapsed_ids=None, searches=None,
-                 include_props=None, exclude_props=None, is_leaf_fn=None):
-        super().__init__(tree, layouts, labels, viewport, zoom,
-                         limits, collapsed_ids, searches,
-                         include_props, exclude_props, is_leaf_fn)
+    def __init__(self, tree, tree_style=None, draw_node_fns=None, labels=None,
+                 viewport=None, zoom=(1, 1), collapsed_ids=None, searches=None):
+        super().__init__(tree, tree_style, draw_node_fns, labels,
+                         viewport, zoom, collapsed_ids, searches)
         # We don't really need to define this function, but we do it
         # for symmetry, because in DrawerCirc it needs to do more things.
 
@@ -342,9 +376,9 @@ class DrawerRect(Drawer):
         """Clip borders of outline to make sure that its box is reasonable."""
         pass  # this function exists only for symmetry with DrawerCirc
 
-    def draw_outline(self):
-        """Yield outline with all the skeleton points."""
-        yield from super().draw_outline()
+    def draw_collapsed(self):
+        """Yield collapsed nodes representation with all the skeleton points."""
+        yield from super().draw_collapsed()
         # For symmetry with DrawerCirc.
 
     def node_size(self, node):
@@ -357,7 +391,7 @@ class DrawerRect(Drawer):
 
     def is_small(self, box):
         zx, zy = self.zoom
-        return box.dy * zy < self.MIN_SIZE
+        return box.dy * zy < self.node_height_min
 
     def draw_hz_line(self, p1, p2, parent_of, style):
         """Yield a "horizontal line" representing a length."""
@@ -383,17 +417,29 @@ class DrawerRect(Drawer):
 class DrawerCirc(Drawer):
     """Drawer for a circular representation."""
 
-    def __init__(self, tree, layouts=None, labels=None, viewport=None,
-                 zoom=(1, 1), limits=None, collapsed_ids=None, searches=None,
-                 include_props=None, exclude_props=None, is_leaf_fn=None):
-        super().__init__(tree, layouts, labels, viewport, zoom,
-                         limits, collapsed_ids, searches,
-                         include_props, exclude_props, is_leaf_fn)
+    def __init__(self, tree, tree_style=None, draw_node_fns=None, labels=None,
+                 viewport=None, zoom=(1, 1), collapsed_ids=None, searches=None):
+        super().__init__(tree, tree_style, draw_node_fns, labels,
+                         viewport, zoom, collapsed_ids, searches)
 
         assert self.zoom[0] == self.zoom[1], 'zoom must be equal in x and y'
 
-        if not limits:
-            self.ymin, self.ymax = -pi, pi
+        self.xmin = self.tree_style.get('radius', 0)
+
+        amin = self.tree_style.get('angle-start')
+        amax = self.tree_style.get('angle-end')
+        self.ymin = amin * pi/180 if amin is not None else -pi
+        self.ymax = amax * pi/180 if amax is not None else +pi
+
+        da = self.tree_style.get('angle-span')
+        if da is not None:
+            if amin is not None and amax is not None:
+                assert abs(amax - (amin + da)) < 1e-10, \
+                    'incompatible values: angle-start, angle-end, angle-span'
+            if amin is not None:
+                self.ymax = self.ymin + da * pi/180
+            else:
+                self.ymin = self.ymax - da * pi/180
 
         self.dy2da = (self.ymax - self.ymin) / self.tree.size[1]
 
@@ -414,9 +460,9 @@ class DrawerCirc(Drawer):
         a1, a2 = clip_angles(a, a + da)
         self.outline = Box(r, a1, dr, a2 - a1)
 
-    def draw_outline(self):
-        """Yield outline with all the skeleton points."""
-        yield from super().draw_outline(self.dy2da)
+    def draw_collapsed(self):
+        """Yield collapsed nodes representation with all the skeleton points."""
+        yield from super().draw_collapsed(self.dy2da)
 
     def node_size(self, node):
         """Return the size of a node (its content and its children)."""
@@ -429,7 +475,7 @@ class DrawerCirc(Drawer):
     def is_small(self, box):
         z = self.zoom[0]  # zx == zy in this drawer
         r, a, dr, da = box
-        return (r + dr) * da * z < self.MIN_SIZE
+        return (r + dr) * da * z < self.node_height_min
 
     def draw_hz_line(self, p1, p2, parent_of, style):
         """Yield a "horizontal line" representing a length."""
@@ -483,7 +529,7 @@ def make_deco(label):
 
 
 def draw_decorations(decorations, nodes, xmin, content_box, bdy, zoom,
-                     min_size, collapsed=False, circular=False):
+                     min_size, collapsed, circular=False):
     """Return the graphic commands from the decorations, and xmax."""
     positions = {a.position for a in decorations}
 
@@ -529,7 +575,7 @@ def draw_decorations(decorations, nodes, xmin, content_box, bdy, zoom,
 
 
 def get_col_data(rows, x_col, dx_col, nodes, pos_box, pos, bdy_dy, zoom,
-                 min_size, collapsed=False, circular=False):
+                 min_size, collapsed, circular=False):
     """Return the graphic elements at the given rows, and the new x_col."""
     # rows contains all the decorations that go in this column.
     # x_col is the starting x for this column (after all boxes in previos cols).
@@ -636,10 +682,10 @@ def get_rect(element):
     eid = element[0]
     if eid in ['nodebox', 'array', 'text']:
         return element[1]
-    elif eid == 'outline':
+    elif eid == 'collapsed':
         points = element[1]
         x, y = points[0]
-        return Box(x, y, 0, 0)  # we don't care for the rect of an outline
+        return Box(x, y, 0, 0)  # we don't care for the rect of this element
     elif eid in ['line', 'hz-line', 'vt-line']:
         (x1, y1), (x2, y2) = element[1], element[2]
         return Box(min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1))
@@ -695,7 +741,7 @@ def stack(box1, box2):
 
 
 def points_from_nodes(nodes, point, dy_min, dy2da=1, maxdepth=30):
-    """Return the points outlining the given nodes, starting at point."""
+    """Return the points sketching the given nodes, starting at point."""
     x, y = point  # top-left origin at point
     dx, dy = 0, 0  # defined here so they can be accessed inside add_points()
     points = []  # the actual points we are interested in
@@ -732,7 +778,7 @@ def points_from_nodes(nodes, point, dy_min, dy2da=1, maxdepth=30):
 
 
 def points_from_node(node, point, dy_min, dy2da=1, maxdepth=30):
-    """Return the points outlining the given node, starting at point."""
+    """Return the points sketching the given node, starting at point."""
     x, y = point
     dx, dy = dist(node), node.size[1] * dy2da
 

@@ -956,27 +956,22 @@ cdef class Tree:
             print('Wrote file:', file_name)
 
     def explore(self, name=None, layouts=None,
-                include_props=('dist', 'support'), exclude_props=None,
-                is_leaf_fn=None,
                 host='127.0.0.1', port=None, verbose=False,
-                compress=False, keep_server=False, open_browser=True):
+                compress=False, keep_server=False, open_browser=True,
+                **kwargs):
         """Launch an interactive session to visualize the tree.
 
         :param str name: Name used to store and refer to the tree.
         :param list layouts: Layouts that specify how to visualize.
-        :param list include_props: Properties to show in the nodes popup.
-            If None, show all.
-        :param list exclude_props: Properties to exclude from the nodes popup.
         :param port: Server listening port. If None, use next
             available port >= 5000.
         """
         from ..smartview import explorer
 
-        explorer.explore(
-            self, name, layouts,
-            include_props, exclude_props, is_leaf_fn,
-            host, port, verbose,
-            compress, keep_server, open_browser)
+        explorer.explore(self, name, layouts,
+                         host, port, verbose,
+                         compress, keep_server, open_browser,
+                         **kwargs)
 
     def render_sm(self, file_name, layouts=None, w=None, h=None):
         """Save an image with the contents of the tree."""

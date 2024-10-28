@@ -23,7 +23,7 @@
 }
 
 .nodedot {
-    opacity: 1;
+    opacity: 0.5;
     fill: #00F;
 }
 
@@ -42,7 +42,7 @@
     stroke: white;
 }
 
-.outline {
+.collapsed {
     fill-opacity: 0.3;
     fill: #EEE;
     stroke: #000;
