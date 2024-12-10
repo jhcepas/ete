@@ -42,8 +42,7 @@
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">InvalidUsage</span><span class="p">,</span> <span class="n">get_random_string</span>
 <span class="kn">from</span> <span class="nn">.draw_helpers</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">setrecursionlimit</span><span class="p">(</span><span class="mi">10000</span><span class="p">)</span>  <span class="c1"># Adjust the value as needed</span>
+
 <span class="n">CHAR_HEIGHT</span> <span class="o">=</span> <span class="mf">1.4</span> <span class="c1"># char&#39;s height to width ratio</span>
 
 <span class="n">ALLOWED_IMG_EXTENSIONS</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="s2">&quot;svg&quot;</span><span class="p">,</span> <span class="s2">&quot;jpeg&quot;</span> <span class="p">]</span>
@@ -189,7 +188,6 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_own_content</span><span class="p">()</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">point</span>
-        
         <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">size</span>
 
         <span class="n">zx</span><span class="p">,</span> <span class="n">zy</span><span class="p">,</span> <span class="n">za</span> <span class="o">=</span> <span class="n">drawer</span><span class="o">.</span><span class="n">zoom</span>
@@ -222,7 +220,6 @@
             <span class="n">avail_dy</span> <span class="o">=</span> <span class="n">dy</span> <span class="o">/</span> <span class="n">n_row</span>
             <span class="n">aligned_x</span> <span class="o">=</span> <span class="n">drawer</span><span class="o">.</span><span class="n">node_size</span><span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">tree</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>\
                     <span class="k">if</span> <span class="n">drawer</span><span class="o">.</span><span class="n">panel</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">drawer</span><span class="o">.</span><span class="n">xmin</span>
-
             <span class="n">x</span> <span class="o">=</span> <span class="n">aligned_x</span> <span class="o">+</span> <span class="n">dx_before</span>
 
             <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="s1">&#39;aligned_bottom&#39;</span><span class="p">:</span>
@@ -246,10 +243,6 @@
             <span class="nb">max</span><span class="p">(</span><span class="n">avail_dx</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">padding_x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">avail_dx</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="nb">max</span><span class="p">(</span><span class="n">avail_dy</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">padding_y</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
 
-        <span class="c1"># if self.name ==&quot;Scale_Face&quot;:</span>
-        <span class="c1">#     print(&quot;Scale_Face&quot;)</span>
-        <span class="c1">#     print(&quot;dx_before&quot;, dx_before)</span>
-        <span class="c1">#     print(x + padding_x)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_box</span></div>
 
 
@@ -1689,7 +1682,7 @@
 
         <span class="n">Face</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
                 <span class="n">padding_x</span><span class="o">=</span><span class="n">padding_x</span><span class="p">,</span> <span class="n">padding_y</span><span class="o">=</span><span class="n">padding_y</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Scale_Face&quot;</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">range</span> <span class="o">=</span> <span class="n">scale_range</span>
@@ -1724,7 +1717,7 @@
 
         <span class="k">if</span> <span class="n">drawer</span><span class="o">.</span><span class="n">TYPE</span> <span class="o">==</span> <span class="s1">&#39;circ&#39;</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">:</span>
             <span class="n">pos</span> <span class="o">=</span> <span class="n">swap_pos</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
-        
+
         <span class="n">box</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">compute_bounding_box</span><span class="p">(</span>
             <span class="n">drawer</span><span class="p">,</span>
             <span class="n">point</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span>
@@ -1736,7 +1729,6 @@
             <span class="n">dx_before</span><span class="p">,</span> <span class="n">dy_before</span><span class="p">)</span>
 
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">box</span>
-
         <span class="n">zx</span><span class="p">,</span> <span class="n">zy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zoom</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">viewport</span> <span class="o">=</span> <span class="p">(</span><span class="n">drawer</span><span class="o">.</span><span class="n">viewport</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">drawer</span><span class="o">.</span><span class="n">viewport</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">drawer</span><span class="o">.</span><span class="n">viewport</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span>
@@ -1749,7 +1741,6 @@
             <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">-</span> <span class="n">height</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_box</span> <span class="o">=</span> <span class="n">Box</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="n">zx</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
-        
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_box</span></div>
 
 
@@ -1761,7 +1752,6 @@
 
         <span class="n">p1</span> <span class="o">=</span> <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">-</span> <span class="mi">5</span> <span class="o">/</span> <span class="n">zy</span><span class="p">)</span>
         <span class="n">p2</span> <span class="o">=</span> <span class="p">(</span><span class="n">x0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">vt_line_height</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">zy</span><span class="p">))</span>
-
         <span class="k">if</span> <span class="n">drawer</span><span class="o">.</span><span class="n">TYPE</span> <span class="o">==</span> <span class="s1">&#39;circ&#39;</span><span class="p">:</span>
             <span class="n">p1</span> <span class="o">=</span> <span class="n">cartesian</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
             <span class="n">p2</span> <span class="o">=</span> <span class="n">cartesian</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
@@ -1770,7 +1760,6 @@
 
 
         <span class="n">nticks</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">zx</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">tick_width</span><span class="p">)</span>
-
         <span class="n">dx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">/</span> <span class="n">nticks</span>
         <span class="n">range_factor</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span>
 
