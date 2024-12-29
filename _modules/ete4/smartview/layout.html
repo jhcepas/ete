@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ete4.smartview.layout &#8212; ETE Toolkit 4.0.0-beta3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../../_static/documentation_options.js?v=9c56ea15"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../../../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for ete4.smartview.layout</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Definition of the basic elements for a tree representation (Layout and</span>
+<span class="sd">Decoration), extra labels (Label), and the default tree style.</span>
+
+<span class="sd">The valid keys for a tree style are:</span>
+
+<span class="sd">- shape</span>
+<span class="sd">- radius</span>
+<span class="sd">- angle-start</span>
+<span class="sd">- angle-end</span>
+<span class="sd">- angle-span</span>
+<span class="sd">- node-height-min</span>
+<span class="sd">- content-height-min</span>
+<span class="sd">- collapsed</span>
+<span class="sd">- show-popup-props</span>
+<span class="sd">- hide-popup-props</span>
+<span class="sd">- is-leaf-fn</span>
+<span class="sd">- box</span>
+<span class="sd">- dot</span>
+<span class="sd">- hz-line</span>
+<span class="sd">- vt-line</span>
+<span class="sd">- aliases</span>
+
+<span class="sd">Some properties will be used directly by the backend: shape,</span>
+<span class="sd">node-height-min, content-height-min, radius, angle-start, angle-end,</span>
+<span class="sd">angle-span, show-popup-props, hide-popup-props, is-leaf-fn.</span>
+
+<span class="sd">Others  will be controlled by the css class of the element in the frontend:</span>
+<span class="sd">box, dot, hz-line, vt-line.</span>
+
+<span class="sd">And the &quot;aliases&quot; part will tell the frontend which styles are referenced.</span>
+
+<span class="sd">Example of a tree style in use::</span>
+
+<span class="sd">  my_tree_style = {</span>
+<span class="sd">     &#39;shape&#39;: &#39;circular&#39;,  # or &#39;rectangular&#39;</span>
+<span class="sd">     &#39;radius&#39;: 5,</span>
+<span class="sd">     &#39;angle-start&#39;: -pi/2,</span>
+<span class="sd">     &#39;angle-end&#39;: pi/2,  # alternatively we can give &#39;angle-span&#39;</span>
+<span class="sd">     &#39;node-height-min&#39;: 10,</span>
+<span class="sd">     &#39;content-height-min&#39;: 5,</span>
+<span class="sd">     &#39;collapsed&#39;: {&#39;shape&#39;: &#39;outline&#39;, &#39;fill-opacity&#39;: 0.8},</span>
+<span class="sd">     &#39;show-popup-props&#39;: None,  # all defined properties</span>
+<span class="sd">     &#39;hide-popup-props&#39;: [&#39;support&#39;],  # except support</span>
+<span class="sd">     &#39;is-leaf-fn&#39;: lambda node: node.level &gt; 4,</span>
+<span class="sd">     &#39;box&#39;: {&#39;fill&#39;: &#39;green&#39;, &#39;opacity&#39;: 0.1, &#39;stroke&#39;: &#39;blue&#39;},</span>
+<span class="sd">     &#39;dot&#39;: {&#39;shape&#39;: &#39;hexagon&#39;, &#39;fill&#39;: &#39;red&#39;},</span>
+<span class="sd">     &#39;hz-line&#39;: {&#39;stroke-width&#39;: 2},</span>
+<span class="sd">     &#39;vt-line&#39;: {&#39;stroke&#39;: &#39;#ffff00&#39;},</span>
+<span class="sd">     &#39;aliases&#39;: {</span>
+<span class="sd">         &#39;support&#39;: {&#39;fill&#39;: &#39;green&#39;},  # changes the default one</span>
+<span class="sd">         &#39;my-leaf&#39;: {&#39;fill&#39;: &#39;blue&#39;, &#39;font-weight&#39;: &#39;bold&#39;},</span>
+<span class="sd">      },</span>
+<span class="sd">  }</span>
+
+<span class="sd">  layout = Layout(name=&#39;Example layout&#39;, draw_tree=my_tree_style)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">from</span> <span class="nn">.faces</span> <span class="kn">import</span> <span class="n">Face</span><span class="p">,</span> <span class="n">PropFace</span><span class="p">,</span> <span class="n">TextFace</span>
+
+
+<span class="c1"># Layouts have all the information needed to represent a tree.</span>
+<span class="c1">#</span>
+
+<div class="viewcode-block" id="Layout">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.layout.Layout">[docs]</a>
+<span class="k">class</span> <span class="nc">Layout</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A complete specification of how to represent a tree.</span>
+
+<span class="sd">    Layouts have a name and two functions providing the style and</span>
+<span class="sd">    decorations of the full tree and the visible nodes.</span>
+
+<span class="sd">    When exploring a tree, layouts compose. Using several layouts will</span>
+<span class="sd">    add extra graphic representations, and/or overwrite some styles</span>
+<span class="sd">    from previous layouts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Layout.__init__">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.layout.Layout.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">draw_tree</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">draw_node</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">active</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param name: String identifying the layout (to select in the gui, etc.)</span>
+<span class="sd">        :param draw_tree: Function specifying tree style and decorations.</span>
+<span class="sd">        :param draw_node: Function specifying node style and decorations.</span>
+<span class="sd">        :param cache_size: Number of elements that draw_node() will memorize</span>
+<span class="sd">            (useful values are None for infinite cache, and 0 for no cache).</span>
+<span class="sd">        :param active: If True, the layout is used immediately when exploring.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache_size</span> <span class="o">=</span> <span class="n">cache_size</span>  <span class="c1"># used to cache functions in the setters</span>
+
+        <span class="c1"># Name. This is mainly to activate/deactivate the layout in the gui.</span>
+        <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="c1"># Tree representation (style and decorations).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw_tree</span> <span class="o">=</span> <span class="n">draw_tree</span>
+
+        <span class="c1"># Node representation (style and decorations).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">draw_node</span> <span class="o">=</span> <span class="n">draw_node</span>
+
+        <span class="c1"># Set if the layout should be initially active in the gui.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">active</span>  <span class="c1"># TODO: Find a better place for this</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">draw_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draw_tree</span>
+
+    <span class="nd">@draw_tree</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">draw_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_draw_tree</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">tree</span><span class="p">:</span> <span class="p">[</span><span class="n">DEFAULT_TREE_STYLE</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_draw_tree</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">tree</span><span class="p">:</span> <span class="p">[</span><span class="n">DEFAULT_TREE_STYLE</span><span class="p">,</span> <span class="n">value</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_size</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">cached_draw_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">DEFAULT_TREE_STYLE</span><span class="p">]</span> <span class="o">+</span> <span class="n">to_elements</span><span class="p">(</span><span class="n">value</span><span class="p">(</span><span class="n">tree</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_draw_tree</span> <span class="o">=</span> <span class="n">cached_draw_tree</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;draw_tree can be either a dict or a function&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draw_node</span>
+
+    <span class="nd">@draw_node</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_draw_node</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">:</span> <span class="p">[]</span>
+            <span class="k">return</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">value</span>  <span class="c1"># nicer name, since it is a function</span>
+
+        <span class="c1"># We use an auxiliary function to cache its results.</span>
+        <span class="n">arity</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arity</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># f(node) (unspecified what to do with collapsed)</span>
+            <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_size</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">cached_draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">collapsed</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">to_elements</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>  <span class="c1"># get just for the node</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">collapsed</span>   <span class="c1"># get from all siblings</span>
+                                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">to_elements</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">n</span><span class="p">))]</span>
+        <span class="k">elif</span> <span class="n">arity</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># f(node, collapsed) (fully specified)</span>
+            <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_size</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">cached_draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">to_elements</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;draw_node can have only 1 or 2 arguments.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draw_node</span> <span class="o">=</span> <span class="n">cached_draw_node</span>  <span class="c1"># use the auxiliary caching function</span></div>
+
+
+
+<div class="viewcode-block" id="to_elements">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.layout.to_elements">[docs]</a>
+<span class="k">def</span> <span class="nf">to_elements</span><span class="p">(</span><span class="n">xs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a list of the elements of iterable xs as Decorations/dicts.&quot;&quot;&quot;</span>
+    <span class="c1"># Normally xs is already a list of decorations/dicts.</span>
+    <span class="k">if</span> <span class="n">xs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># but xs can be None (a draw_node() didn&#39;t return anything)</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">xs</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>  <span class="c1"># or it can be a single element</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">xs</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Decoration</span> <span class="k">else</span> <span class="n">Decoration</span><span class="p">(</span><span class="n">xs</span><span class="p">)]</span>
+
+    <span class="c1"># Return elements, wrapped as Decorations if they need it.</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">x</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Decoration</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="k">else</span> <span class="n">Decoration</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">]</span></div>
+
+
+
+<span class="n">DEFAULT_TREE_STYLE</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># the default style of a tree</span>
+    <span class="s1">&#39;show-popup-props&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;dist&#39;</span><span class="p">,</span> <span class="s1">&#39;support&#39;</span><span class="p">],</span>
+    <span class="s1">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">{</span>  <span class="c1"># to name styles that can be referenced in draw_node</span>
+        <span class="s1">&#39;dist&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;#888&#39;</span><span class="p">},</span>
+        <span class="s1">&#39;support&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;#f88&#39;</span><span class="p">},</span>  <span class="c1"># a light red</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="update_style">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.layout.update_style">[docs]</a>
+<span class="k">def</span> <span class="nf">update_style</span><span class="p">(</span><span class="n">style</span><span class="p">,</span> <span class="n">style_new</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Update the style dictionary merging properly with style_new.&quot;&quot;&quot;</span>
+    <span class="n">subdicts</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">style_new</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">style_new</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">dict</span> <span class="ow">and</span>
+                                        <span class="nb">type</span><span class="p">(</span><span class="n">style</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">}</span>
+    <span class="n">style</span><span class="o">.</span><span class="n">update</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">style_new</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                     <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">subdicts</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">subdicts</span><span class="p">:</span>
+        <span class="n">update_style</span><span class="p">(</span><span class="n">style</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">style_new</span><span class="p">[</span><span class="n">k</span><span class="p">])</span></div>
+
+
+
+
+<div class="viewcode-block" id="Decoration">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.layout.Decoration">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Decoration</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A decoration is a face with a position (&quot;top&quot;, &quot;bottom&quot;, &quot;right&quot;,</span>
+<span class="sd">    etc.), a column (an integer used for relative order with other faces</span>
+<span class="sd">    in the same position), and an anchor point (to fine-tune the</span>
+<span class="sd">    position of things like texts within them).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">face</span><span class="p">:</span> <span class="n">Face</span>
+    <span class="n">position</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">column</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">anchor</span><span class="p">:</span> <span class="nb">tuple</span>
+
+<div class="viewcode-block" id="Decoration.__init__">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.layout.Decoration.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">face</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">face</span> <span class="o">=</span> <span class="n">TextFace</span><span class="p">(</span><span class="n">face</span><span class="p">)</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">face</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span> <span class="k">else</span> <span class="n">face</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">position</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">column</span> <span class="o">=</span> <span class="n">column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">anchor</span> <span class="o">=</span> <span class="n">anchor</span> <span class="ow">or</span> <span class="n">default_anchors</span><span class="p">[</span><span class="n">position</span><span class="p">]</span></div>
+</div>
+
+
+<span class="n">default_anchors</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;top&#39;</span><span class="p">:</span>     <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>   <span class="c1"># left, bottom</span>
+                   <span class="s1">&#39;bottom&#39;</span><span class="p">:</span>  <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>  <span class="c1"># left, top</span>
+                   <span class="s1">&#39;right&#39;</span><span class="p">:</span>   <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>   <span class="c1"># left, middle</span>
+                   <span class="s1">&#39;left&#39;</span><span class="p">:</span>    <span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>   <span class="c1"># right, middle</span>
+                   <span class="s1">&#39;aligned&#39;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>   <span class="c1"># left, middle</span>
+                   <span class="s1">&#39;header&#39;</span><span class="p">:</span>  <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>   <span class="c1"># (unused for the moment)</span>
+                   <span class="s1">&#39;footer&#39;</span><span class="p">:</span>  <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)}</span>   <span class="c1"># (unused for the moment)</span>
+
+
+<span class="c1"># The default layout.</span>
+
+<div class="viewcode-block" id="default_draw_node">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.layout.default_draw_node">[docs]</a>
+<span class="k">def</span> <span class="nf">default_draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">collapsed</span><span class="p">:</span>
+        <span class="n">face_dist</span> <span class="o">=</span> <span class="n">PropFace</span><span class="p">(</span><span class="s1">&#39;dist&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%.2g</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;dist&#39;</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">Decoration</span><span class="p">(</span><span class="n">face_dist</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">)</span>
+
+        <span class="n">face_support</span> <span class="o">=</span> <span class="n">PropFace</span><span class="p">(</span><span class="s1">&#39;support&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%.2g</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s1">&#39;support&#39;</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">Decoration</span><span class="p">(</span><span class="n">face_support</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_leaf</span> <span class="ow">or</span> <span class="n">collapsed</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">Decoration</span><span class="p">(</span><span class="n">PropFace</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">),</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span></div>
+
+
+<span class="n">BASIC_LAYOUT</span> <span class="o">=</span> <span class="n">Layout</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;basic&#39;</span><span class="p">,</span> <span class="n">draw_node</span><span class="o">=</span><span class="n">default_draw_node</span><span class="p">)</span>
+
+
+<span class="c1"># Description of a label that we want to add to the representation of a node.</span>
+
+<span class="n">Label</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Label&#39;</span><span class="p">,</span> <span class="s1">&#39;code style node_type position column anchor fs_max&#39;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">ETE Toolkit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faqs.html">Frequently Asked Questions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2008 - 2024, The ETE Toolkit Team.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

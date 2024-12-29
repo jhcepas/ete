@@ -324,8 +324,7 @@ linked to nodes and they will be plotted within the tree image.
 Several types of node faces are provided by the main :mod:`treeview`
 module, ranging from simple text (:class:`TextFace`) and geometric
 shapes (:class:`CircleFace`), to molecular sequence representations
-(:class:`SequenceFace`), heatmaps and profile plots
-(:class:`ProfileFace`).
+(:class:`SequenceFace`).
 
 A complete list of available faces can be found at the :mod:`treeview`
 reference page.

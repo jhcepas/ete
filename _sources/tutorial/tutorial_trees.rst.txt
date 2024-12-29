@@ -1,56 +1,44 @@
 .. currentmodule:: ete4
 
-Working with the Tree structure
-===============================
+The Tree structure
+==================
 
 .. contents::
 
 Trees
 -----
 
-Trees are a widely-used type of data structure that emulates a tree
-design with a set of linked nodes. Formally, a tree is considered an
-acyclic and connected graph. Each node in a tree has zero or more
-child nodes, which are below it in the tree (by convention, trees grow
-down, not up as they do in nature). A node that has a child is called
-the child's parent node (or ancestor node, or superior). A node has at
-most one parent.
+A **tree** is a widely-used data structures that emulates a tree shape
+with a set of linked **nodes**. Each node in a tree has zero or more
+child nodes, and one parent node (except the **root node**, which has
+no parent).
 
-The height of a node is the length of the longest downward path to a
-leaf from that node. The height of the root is the height of the tree.
-The depth of a node is the length of the path to its root (i.e., its
-root path).
+Formally, a tree is a *graph* (set of connected nodes) which is
+*directed* (connections have direction), *acyclic* (there are no
+loops), and *totally connected* (can reach all nodes starting from the
+root node).
 
-* The topmost node in a tree is called the root node. Being the
-  topmost node, the root node will not have parents. It is the node at
-  which operations on the tree commonly begin (although some
-  algorithms begin with the leaf nodes and work up ending at the
-  root). All other nodes can be reached from it by following edges or
-  links. Every node in a tree can be seen as the root node of the
-  subtree rooted at that node.
+Nodes with children are called **internal nodes**, and nodes with no
+children are called **leaf nodes** (or simply **leaves**).
 
-* Nodes at the bottommost level of the tree are called leaf nodes.
-  Since they are at the bottommost level, they do not have any
-  children.
+::
 
-* An internal node or inner node is any node of a tree that has child
-  nodes and is thus not a leaf node.
+        ╭╴leaf
+  ╴root╶┤          ╭╴internal╶┬╴leaf
+        ╰╴internal╶┤          ╰╴internal╶┬╴leaf
+                   │                     ╰╴leaf
+                   ╰╴internal╶┬╴leaf
+                              ╰╴leaf
 
-* A subtree is a portion of a tree data structure that can be viewed
-  as a complete tree in itself. Any node in a tree T, together with
-  all the nodes below it, comprise a subtree of T. The subtree
-  corresponding to the root node is the entire tree; the subtree
-  corresponding to any other node is called a proper subtree (in
-  analogy to the term proper subset).
+Every node in a tree can be seen as the root node of the *subtree*
+composed of that node and all its descendants.
 
 In bioinformatics, trees are the result of many analyses, such as
-phylogenetics or clustering. Although each case entails specific
-considerations, many properties remains constant among them. In this
-respect, ETE is a python toolkit that assists in the automated
-manipulation, analysis and visualization of any type of hierarchical
-trees. It provides general methods to handle and visualize tree
-topologies, as well as specific modules to deal with phylogenetic and
-clustering trees.
+phylogenetics or clustering. To assists in their manipulation,
+analysis and visualization, we developed ETE (the *Environment for
+Tree Exploration*). It is a Python package that provides general
+methods to handle and visualize tree topologies, as well as specific
+modules to deal with phylogenetic trees.
 
 
 .. _sec:newick-formats:

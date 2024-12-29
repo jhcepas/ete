@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ete4.smartview.explorer &#8212; ETE Toolkit 4.0.0-beta3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <script src="../../../_static/documentation_options.js?v=9c56ea15"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../../../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for ete4.smartview.explorer</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Web server to explore trees interactively.</span>
+
+<span class="sd">The main endpoints are for the static files to serve the frontend</span>
+<span class="sd">(that uses javascript), and for exposing an api to manipulate the</span>
+<span class="sd">trees in the backend.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">gzip</span><span class="o">,</span> <span class="nn">bz2</span><span class="o">,</span> <span class="nn">zipfile</span><span class="o">,</span> <span class="nn">tarfile</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="kn">import</span> <span class="nn">webbrowser</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">ArgumentDefaultsHelpFormatter</span> <span class="k">as</span> <span class="n">fmt</span>
+<span class="kn">from</span> <span class="nn">wsgiref.simple_server</span> <span class="kn">import</span> <span class="n">make_server</span><span class="p">,</span> <span class="n">WSGIRequestHandler</span>
+
+<span class="kn">import</span> <span class="nn">brotli</span>
+
+<span class="kn">from</span> <span class="nn">bottle</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get</span><span class="p">,</span> <span class="n">post</span><span class="p">,</span> <span class="n">put</span><span class="p">,</span> <span class="n">delete</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">static_file</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">abort</span><span class="p">,</span> <span class="n">HTTPError</span><span class="p">,</span> <span class="n">default_app</span><span class="p">)</span>
+
+<span class="n">DIR_BIN</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">DIR_BIN</span><span class="p">))</span>  <span class="c1"># so we can import ete w/o install</span>
+
+<span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">newick</span><span class="p">,</span> <span class="n">nexus</span><span class="p">,</span> <span class="n">operations</span> <span class="k">as</span> <span class="n">ops</span><span class="p">,</span> <span class="n">treematcher</span> <span class="k">as</span> <span class="n">tm</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">draw</span>
+<span class="kn">from</span> <span class="nn">.layout</span> <span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">BASIC_LAYOUT</span><span class="p">,</span> <span class="n">update_style</span>
+
+<span class="n">DIR_LIB</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">draw</span><span class="o">.</span><span class="vm">__file__</span><span class="p">))</span>
+
+
+<span class="c1"># Make sure we send the errors as json too.</span>
+<div class="viewcode-block" id="json_error">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.json_error">[docs]</a>
+<span class="nd">@error</span><span class="p">(</span><span class="mi">400</span><span class="p">)</span>
+<span class="nd">@error</span><span class="p">(</span><span class="mi">404</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">json_error</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">content_type</span> <span class="o">=</span> <span class="s1">&#39;application/json&#39;</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="n">error</span><span class="o">.</span><span class="n">body</span><span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="req_json">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.req_json">[docs]</a>
+<span class="k">def</span> <span class="nf">req_json</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return what request.json would return, but gracefully aborting.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;bad json content: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="nice_html">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.nice_html">[docs]</a>
+<span class="k">def</span> <span class="nf">nice_html</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;Tree Explorer&#39;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the content as part of a nice-looking html page.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">&lt;!DOCTYPE html&gt;</span>
+<span class="s2">&lt;html&gt;&lt;head&gt;&lt;title&gt;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&lt;/title&gt;</span>
+<span class="s2">&lt;link rel=&quot;icon&quot; type=&quot;image/png&quot; href=&quot;/static/icon.png&quot;&gt;</span>
+<span class="s2">&lt;link rel=&quot;stylesheet&quot; href=&quot;/static/upload.css&quot;&gt;&lt;/head&gt;</span>
+<span class="s2">&lt;body&gt;&lt;div class=&quot;centered&quot;&gt;</span><span class="si">{</span><span class="n">content</span><span class="si">}</span><span class="s2">&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;&quot;&quot;&quot;</span></div>
+
+
+
+<span class="c1"># Routes.</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">g_trees</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g_trees</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">g_trees</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">redirect</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;/static/gui.html?tree=</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">trees</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;&lt;li&gt;&lt;a href=&quot;/static/gui.html?tree=&#39;</span>
+                              <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot;&gt;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&lt;/li&gt;&#39;</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">g_trees</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">nice_html</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&lt;h1&gt;Loaded Trees&lt;/h1&gt;&lt;ul&gt;</span><span class="se">\n</span><span class="si">{</span><span class="n">trees</span><span class="si">}</span><span class="se">\n</span><span class="s1">&lt;/ul&gt;&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nice_html</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;&lt;h1&gt;Tree Explorer&lt;/h1&gt;</span>
+<span class="s2">&lt;p&gt;No trees loaded.&lt;/p&gt;</span>
+<span class="s2">&lt;p&gt;See the &lt;a href=&quot;/help&quot;&gt;help page&lt;/a&gt; for more information.&lt;/p&gt;&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/help&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">nice_html</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;&lt;h1&gt;Help&lt;/h1&gt;</span>
+<span class="s2">You can go to the &lt;a href=&quot;/static/upload.html&quot;&gt;upload page&lt;/a&gt;, see</span>
+<span class="s2">a &lt;a href=&quot;/&quot;&gt;list of loaded trees&lt;/a&gt;, or</span>
+<span class="s2">&lt;a href=&quot;http://etetoolkit.org/&quot;&gt;consult the documentation&lt;/a&gt;.&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/static/&lt;path:path&gt;&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">static_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">DIR_LIB</span><span class="si">}</span><span class="s1">/static&#39;</span><span class="p">)</span>
+
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/api&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get all the available api endpoints and their documentation.&quot;&quot;&quot;</span>
+    <span class="n">exclude</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;/help&quot;</span><span class="p">,</span> <span class="s2">&quot;/static/&lt;path:path&gt;&quot;</span><span class="p">}</span>  <span class="c1"># excluded endpoints</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">r</span><span class="o">.</span><span class="n">rule</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">callback</span><span class="o">.</span><span class="vm">__doc__</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">default_app</span><span class="p">()</span><span class="o">.</span><span class="n">routes</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">rule</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">}</span>
+
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/trees&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get information about all the loaded trees.&quot;&quot;&quot;</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">content_type</span> <span class="o">=</span> <span class="s1">&#39;application/json&#39;</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">([{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">}</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">g_trees</span><span class="p">])</span>
+
+<span class="c1"># TODO: In the future we should not need this, since now the only</span>
+<span class="c1"># property of a tree is its name, and we use it for its tree_id.</span>
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get information about the requested tree.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tree_id</span> <span class="ow">in</span> <span class="n">g_trees</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">tree_id</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;unknown tree </span><span class="si">{</span><span class="n">tree_id</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/size&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get tree size as {&#39;width&#39;: w, &#39;height&#39;: h}.&quot;&quot;&quot;</span>
+    <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span><span class="o">.</span><span class="n">size</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="n">width</span><span class="p">,</span> <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="n">height</span><span class="p">}</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/nodecount&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the total number of nodes and leaves of the given tree.&quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;nnodes&#39;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">traverse</span><span class="p">()),</span>
+            <span class="s1">&#39;nleaves&#39;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">leaves</span><span class="p">())}</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/properties&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a list of the available properties for the tree.&quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+    <span class="n">props</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">traverse</span><span class="p">():</span>
+        <span class="n">props</span> <span class="o">|=</span> <span class="n">node</span><span class="o">.</span><span class="n">props</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+    <span class="n">response</span><span class="o">.</span><span class="n">content_type</span> <span class="o">=</span> <span class="s1">&#39;application/json&#39;</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">props</span><span class="p">))</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/layouts&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the layout names and default options, available for the tree.&quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_tid</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>  <span class="c1"># &quot;name&quot; or &quot;tid&quot; is what identifies the tree</span>
+    <span class="n">layouts</span> <span class="o">=</span> <span class="n">g_layouts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">[])</span>  <span class="c1"># layouts available for the tree</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">layout</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;active&#39;</span><span class="p">:</span> <span class="n">layout</span><span class="o">.</span><span class="n">active</span><span class="p">}</span> <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="n">layouts</span><span class="p">}</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/style&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the style of the tree according to all the active layouts.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">query</span>  <span class="c1"># shortcut</span>
+        <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">],</span> <span class="s1">&#39;missing list of active layouts&#39;</span>
+
+        <span class="n">active</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]))</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+
+        <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_tid</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>  <span class="c1"># &quot;name&quot; or &quot;tid&quot; is what identifies the tree</span>
+
+        <span class="c1"># Get the style of the tree according to all the layouts.</span>
+        <span class="n">style</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="n">g_layouts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="n">layout</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">active</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">layout</span><span class="o">.</span><span class="n">draw_tree</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+                        <span class="n">update_style</span><span class="p">(</span><span class="n">style</span><span class="p">,</span> <span class="n">element</span><span class="p">)</span>
+
+        <span class="c1"># Susbstitute aliases for their corresponding styles.</span>
+        <span class="n">aliasable_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;box&#39;</span><span class="p">,</span> <span class="s1">&#39;dot&#39;</span><span class="p">,</span> <span class="s1">&#39;hz-line&#39;</span><span class="p">,</span> <span class="s1">&#39;vt-line&#39;</span><span class="p">,</span> <span class="s1">&#39;collapsed&#39;</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">style</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">aliasable_keys</span><span class="p">:</span>
+                <span class="n">aliases</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">style</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;aliases&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="k">assert</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">aliases</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;unknown style &quot;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1">&quot; among </span><span class="si">{</span><span class="n">aliases</span><span class="si">}</span><span class="s1">&#39;</span>
+                <span class="n">style</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">style</span><span class="p">[</span><span class="s1">&#39;aliases&#39;</span><span class="p">][</span><span class="n">v</span><span class="p">]</span>
+        <span class="c1"># NOTE: The principal use of &quot;aliases&quot; is for the styles coming out of</span>
+        <span class="c1"># calling draw_node() in the layouts. This is just an extra.</span>
+
+        <span class="c1"># We remove is-leaf-fn because it is a function (thus not serializable).</span>
+        <span class="n">style</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;is-leaf-fn&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># We keep other parts like &quot;aliases&quot; if they are in the style, even if</span>
+        <span class="c1"># the gui will not do anything with them.</span>
+
+        <span class="k">return</span> <span class="n">style</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AssertionError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/draw&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get all the drawing commands to represent the tree.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="n">get_drawing_kwargs</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">query</span><span class="p">)</span>
+
+        <span class="n">graphics</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">draw</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)))</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">)</span>
+
+        <span class="n">response</span><span class="o">.</span><span class="n">content_type</span> <span class="o">=</span> <span class="s1">&#39;application/json&#39;</span>
+        <span class="k">if</span> <span class="n">g_config</span><span class="p">[</span><span class="s1">&#39;compress&#39;</span><span class="p">]:</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s1">&#39;Content-Encoding&#39;</span><span class="p">,</span> <span class="s1">&#39;br&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">brotli</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">graphics</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">graphics</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">AssertionError</span><span class="p">,</span> <span class="ne">SyntaxError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;when drawing: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/search&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Store a search, saving matching nodes so they can be later drawn.&quot;&quot;&quot;</span>
+    <span class="n">nresults</span><span class="p">,</span> <span class="n">nparents</span> <span class="o">=</span> <span class="n">store_search</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">query</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">,</span> <span class="s1">&#39;nresults&#39;</span><span class="p">:</span> <span class="n">nresults</span><span class="p">,</span> <span class="s1">&#39;nparents&#39;</span><span class="p">:</span> <span class="n">nparents</span><span class="p">}</span>
+
+<span class="nd">@get</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/newick&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the newick string that represents the tree.&quot;&quot;&quot;</span>
+    <span class="n">MAX_MB</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">content_type</span> <span class="o">=</span> <span class="s1">&#39;application/json&#39;</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">get_newick</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">MAX_MB</span><span class="p">))</span>
+
+<span class="nd">@put</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/clear_searches&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove all saved searches.&quot;&quot;&quot;</span>
+    <span class="n">g_searches</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+
+<span class="nd">@put</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/sort&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sort the nodes in the tree according to the criteria in the request.&quot;&quot;&quot;</span>
+    <span class="n">node_id</span><span class="p">,</span> <span class="n">key_text</span><span class="p">,</span> <span class="n">reverse</span> <span class="o">=</span> <span class="n">req_json</span><span class="p">()</span>
+    <span class="n">sort</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">key_text</span><span class="p">,</span> <span class="n">reverse</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+
+<span class="nd">@put</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/set_outgroup&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the requested node as an outgroup in the tree.&quot;&quot;&quot;</span>
+    <span class="n">tid</span><span class="p">,</span> <span class="n">subtree</span> <span class="o">=</span> <span class="n">get_tid</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">subtree</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;operation not allowed with subtree&#39;</span><span class="p">)</span>
+    <span class="n">node_id</span> <span class="o">=</span> <span class="n">req_json</span><span class="p">()</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tid</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">set_outgroup</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">node_id</span><span class="p">])</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">update_sizes_all</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+    <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;cannot root at </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nd">@put</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/move&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Move the requested node up/down within its siblings.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+        <span class="n">node_id</span><span class="p">,</span> <span class="n">shift</span> <span class="o">=</span> <span class="n">req_json</span><span class="p">()</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">node_id</span><span class="p">],</span> <span class="n">shift</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+    <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;cannot move </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nd">@put</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/remove&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove the requested node (including descendants) from the tree.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">req_json</span><span class="p">()</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">node_id</span><span class="p">])</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">update_sizes_all</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+    <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;cannot remove </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nd">@put</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/rename&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Change name of the requested node in the tree.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+        <span class="n">node_id</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">req_json</span><span class="p">()</span>
+        <span class="n">t</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+    <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;cannot rename </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nd">@put</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/edit&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Edit content (with newick notation) of the requested node in the tree.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+        <span class="n">node_id</span><span class="p">,</span> <span class="n">content</span> <span class="o">=</span> <span class="n">req_json</span><span class="p">()</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">props</span> <span class="o">=</span> <span class="n">newick</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">is_leaf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">update_sizes_all</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">AssertionError</span><span class="p">,</span> <span class="n">newick</span><span class="o">.</span><span class="n">NewickError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;cannot edit </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nd">@put</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/to_dendrogram&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert tree to dendrogram (remove all branch distances).&quot;&quot;&quot;</span>
+    <span class="n">node_id</span> <span class="o">=</span> <span class="n">req_json</span><span class="p">()</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+    <span class="n">ops</span><span class="o">.</span><span class="n">to_dendrogram</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">node_id</span><span class="p">])</span>
+    <span class="n">ops</span><span class="o">.</span><span class="n">update_sizes_all</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+
+<span class="nd">@put</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;/to_ultrametric&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert tree to ultrametric (all leaves ending at the same distance).&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">req_json</span><span class="p">()</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">to_ultrametric</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">node_id</span><span class="p">])</span>
+        <span class="n">ops</span><span class="o">.</span><span class="n">update_sizes_all</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+    <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;cannot convert to ultrametric </span><span class="si">{</span><span class="n">tree_id</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nd">@post</span><span class="p">(</span><span class="s1">&#39;/trees&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a new tree.&quot;&quot;&quot;</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="n">add_trees_from_request</span><span class="p">()</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="mi">201</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">,</span> <span class="s1">&#39;ids&#39;</span><span class="p">:</span> <span class="n">ids</span><span class="p">}</span>
+
+<div class="viewcode-block" id="callback">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.callback">[docs]</a>
+<span class="nd">@delete</span><span class="p">(</span><span class="s1">&#39;/trees/&lt;tree_id&gt;&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">callback</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove a tree.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">remove_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;ok&#39;</span><span class="p">}</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;unknown tree </span><span class="si">{</span><span class="n">tree_id</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># Logic.</span>
+
+<span class="c1"># Global variables.</span>
+<span class="n">g_trees</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># &#39;name&#39; -&gt; Tree</span>
+<span class="n">g_config</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;compress&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>  <span class="c1"># global configuration</span>
+<span class="n">g_layouts</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># &#39;name&#39; -&gt; list of available layouts</span>
+<span class="n">g_searches</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># &#39;searched_text&#39; -&gt; ({result nodes}, {parent nodes})</span>
+<span class="n">g_threads</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># {&#39;server&#39;: (thread, server)}</span>
+
+<div class="viewcode-block" id="load_tree">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.load_tree">[docs]</a>
+<span class="k">def</span> <span class="nf">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add tree to g_trees and initialize it if not there, and return it.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tid</span><span class="p">,</span> <span class="n">subtree</span> <span class="o">=</span> <span class="n">get_tid</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">g_trees</span><span class="p">[</span><span class="n">tid</span><span class="p">][</span><span class="n">subtree</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;unknown tree id </span><span class="si">{</span><span class="n">tree_id</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_tid">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_tid">[docs]</a>
+<span class="k">def</span> <span class="nf">get_tid</span><span class="p">(</span><span class="n">tree_id</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the tree id and the subtree id, with the appropriate types.&quot;&quot;&quot;</span>
+    <span class="c1"># Example: &#39;my_tree,1,0,1,1&#39; -&gt; (&#39;my_tree&#39;, [1, 0, 1, 1])</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tid</span><span class="p">,</span> <span class="o">*</span><span class="n">subtree</span> <span class="o">=</span> <span class="n">tree_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tid</span><span class="p">,</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">subtree</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;invalid tree id </span><span class="si">{</span><span class="n">tree_id</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_newick">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_newick">[docs]</a>
+<span class="k">def</span> <span class="nf">get_newick</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">max_mb</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the newick representation of the given tree.&quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+
+    <span class="n">nw</span> <span class="o">=</span> <span class="n">newick</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="n">size_mb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nw</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e6</span>
+    <span class="k">if</span> <span class="n">size_mb</span> <span class="o">&gt;</span> <span class="n">max_mb</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;newick too big (</span><span class="si">%.3g</span><span class="s1"> MB)&#39;</span> <span class="o">%</span> <span class="n">size_mb</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">nw</span></div>
+
+
+
+<div class="viewcode-block" id="sort">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.sort">[docs]</a>
+<span class="k">def</span> <span class="nf">sort</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">key_text</span><span class="p">,</span> <span class="n">reverse</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sort the (sub)tree corresponding to tree_id and node_id.&quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">key_text</span><span class="p">,</span> <span class="s1">&#39;&lt;string&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">SyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;compiling expression: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">key</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">safer_eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s1">&#39;node&#39;</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;is_leaf&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">,</span>
+            <span class="s1">&#39;length&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="s1">&#39;dist&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span>
+            <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="s1">&#39;dx&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;dy&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s1">&#39;children&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">,</span> <span class="s1">&#39;ch&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">,</span>
+            <span class="s1">&#39;len&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">,</span> <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">,</span> <span class="s1">&#39;abs&#39;</span><span class="p">:</span> <span class="nb">abs</span><span class="p">})</span>
+
+    <span class="n">ops</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">node_id</span><span class="p">],</span> <span class="n">key</span><span class="p">,</span> <span class="n">reverse</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># Drawing arguments.</span>
+
+<div class="viewcode-block" id="get_drawing_kwargs">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_drawing_kwargs">[docs]</a>
+<span class="k">def</span> <span class="nf">get_drawing_kwargs</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the drawing arguments initialized as specified in the args.&quot;&quot;&quot;</span>
+    <span class="n">valid_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;zx&#39;</span><span class="p">,</span> <span class="s1">&#39;zy&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;layouts&#39;</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="s1">&#39;collapsed_shape&#39;</span><span class="p">,</span> <span class="s1">&#39;collapsed_ids&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="s1">&#39;node_height_min&#39;</span><span class="p">,</span> <span class="s1">&#39;content_height_min&#39;</span><span class="p">,</span>
+                  <span class="s1">&#39;rmin&#39;</span><span class="p">,</span> <span class="s1">&#39;amin&#39;</span><span class="p">,</span> <span class="s1">&#39;amax&#39;</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">k</span> <span class="ow">in</span> <span class="n">valid_keys</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="s1">&#39;invalid keys&#39;</span>
+
+        <span class="n">get</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">default</span><span class="p">))</span>  <span class="c1"># shortcut</span>
+
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+
+        <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_tid</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>  <span class="c1"># &quot;name&quot; or &quot;tid&quot; is what identifies the tree</span>
+
+        <span class="c1"># Active layouts.</span>
+        <span class="n">layout_names</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;layouts&#39;</span><span class="p">,</span> <span class="s1">&#39;[]&#39;</span><span class="p">))</span>  <span class="c1"># active layouts</span>
+        <span class="n">layouts</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">g_layouts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">[])</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">layout_names</span><span class="p">]</span>
+
+        <span class="c1"># Things that can be set in a tree style, and we override from the gui.</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="s1">&#39;rectangular&#39;</span><span class="p">)</span>
+
+        <span class="n">collapsed_shape</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;collapsed_shape&#39;</span><span class="p">,</span> <span class="s1">&#39;skeleton&#39;</span><span class="p">)</span>
+
+        <span class="n">node_height_min</span> <span class="o">=</span> <span class="n">get</span><span class="p">(</span><span class="s1">&#39;node_height_min&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">node_height_min</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;node_height_min must be &gt; 0&#39;</span>
+
+        <span class="n">content_height_min</span> <span class="o">=</span> <span class="n">get</span><span class="p">(</span><span class="s1">&#39;content_height_min&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">content_height_min</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;content_height_min must be &gt; 0&#39;</span>
+
+        <span class="n">overrides</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># overrides of the tree style from the gui</span>
+            <span class="s1">&#39;shape&#39;</span><span class="p">:</span> <span class="n">shape</span><span class="p">,</span>
+            <span class="s1">&#39;collapsed-shape&#39;</span><span class="p">:</span> <span class="n">collapsed_shape</span><span class="p">,</span>
+            <span class="s1">&#39;node-height-min&#39;</span><span class="p">:</span> <span class="n">node_height_min</span><span class="p">,</span>
+            <span class="s1">&#39;content-height-min&#39;</span><span class="p">:</span> <span class="n">content_height_min</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">==</span> <span class="s1">&#39;circular&#39;</span><span class="p">:</span>
+            <span class="n">overrides</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s1">&#39;radius&#39;</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="s1">&#39;rmin&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="s1">&#39;angle-start&#39;</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="s1">&#39;amin&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">180</span><span class="p">),</span>
+                <span class="s1">&#39;angle-end&#39;</span><span class="p">:</span> <span class="n">get</span><span class="p">(</span><span class="s1">&#39;amax&#39;</span><span class="p">,</span> <span class="mi">180</span><span class="p">)})</span>
+
+        <span class="c1"># Get the rest: labels, viewport, zoom, collapsed_ids, searches.</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;labels&#39;</span><span class="p">,</span> <span class="s1">&#39;[]&#39;</span><span class="p">))</span>
+
+        <span class="n">viewport</span> <span class="o">=</span> <span class="p">([</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">k</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">])</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">viewport</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="n">viewport</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">viewport</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">),</span> \
+            <span class="s1">&#39;invalid viewport&#39;</span>  <span class="c1"># width and height must be &gt; 0</span>
+
+        <span class="n">zoom</span> <span class="o">=</span> <span class="p">(</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;zx&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">get</span><span class="p">(</span><span class="s1">&#39;zy&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="n">zoom</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">zoom</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;zoom must be &gt; 0&#39;</span>
+
+        <span class="n">collapsed_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">node_id</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;collapsed_ids&#39;</span><span class="p">,</span> <span class="s1">&#39;[]&#39;</span><span class="p">)))</span>
+
+        <span class="n">searches</span> <span class="o">=</span> <span class="n">g_searches</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;tree&#39;</span><span class="p">:</span> <span class="n">tree</span><span class="p">,</span>
+                <span class="s1">&#39;layouts&#39;</span><span class="p">:</span> <span class="n">layouts</span><span class="p">,</span>
+                <span class="s1">&#39;overrides&#39;</span><span class="p">:</span> <span class="n">overrides</span><span class="p">,</span>
+                <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="n">labels</span><span class="p">,</span>
+                <span class="s1">&#39;viewport&#39;</span><span class="p">:</span> <span class="n">viewport</span><span class="p">,</span>
+                <span class="s1">&#39;zoom&#39;</span><span class="p">:</span> <span class="n">zoom</span><span class="p">,</span>
+                <span class="s1">&#39;collapsed_ids&#39;</span><span class="p">:</span> <span class="n">collapsed_ids</span><span class="p">,</span>
+                <span class="s1">&#39;searches&#39;</span><span class="p">:</span> <span class="n">searches</span><span class="p">}</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AssertionError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+
+
+<span class="c1"># Search.</span>
+
+<div class="viewcode-block" id="store_search">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.store_search">[docs]</a>
+<span class="k">def</span> <span class="nf">store_search</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Store the results and parents of a search and return their numbers.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;text&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;missing search text&#39;</span><span class="p">)</span>
+
+    <span class="n">text</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">func</span> <span class="o">=</span> <span class="n">get_search_function</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="n">load_tree</span><span class="p">(</span><span class="n">tree_id</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">traverse</span><span class="p">()</span> <span class="k">if</span> <span class="n">func</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+
+        <span class="n">parents</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>  <span class="c1"># all ancestors leading to the result nodes</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">up</span>  <span class="c1"># current node that we examine</span>
+            <span class="k">while</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">tree</span> <span class="ow">and</span> <span class="n">current</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parents</span><span class="p">:</span>
+                <span class="n">parents</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+                <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">up</span>  <span class="c1"># go to its parent</span>
+
+        <span class="n">g_searches</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">tree_id</span><span class="p">,</span> <span class="p">{})[</span><span class="n">text</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">parents</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">parents</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">HTTPError</span><span class="p">:</span>
+        <span class="k">raise</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;evaluating expression: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_search_function">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_search_function">[docs]</a>
+<span class="k">def</span> <span class="nf">get_search_function</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a function of a node that returns True for the searched nodes.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">):</span>  <span class="c1"># command-based search</span>
+        <span class="k">return</span> <span class="n">get_command_search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">text</span> <span class="o">==</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>  <span class="c1"># case-insensitive search</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># case-sensitive search</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_command_search">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_command_search">[docs]</a>
+<span class="k">def</span> <span class="nf">get_command_search</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the appropriate node search function according to the command.&quot;&quot;&quot;</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;/r&#39;</span><span class="p">,</span> <span class="s1">&#39;/e&#39;</span><span class="p">,</span> <span class="s1">&#39;/t&#39;</span><span class="p">]:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;invalid command </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;missing argument to command </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">command</span><span class="p">,</span> <span class="n">arg</span> <span class="o">=</span> <span class="n">parts</span>
+    <span class="k">if</span> <span class="n">command</span> <span class="o">==</span> <span class="s1">&#39;/r&#39;</span><span class="p">:</span>  <span class="c1"># regex search</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">props</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">command</span> <span class="o">==</span> <span class="s1">&#39;/e&#39;</span><span class="p">:</span>  <span class="c1"># eval expression</span>
+        <span class="k">return</span> <span class="n">get_eval_search</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">command</span> <span class="o">==</span> <span class="s1">&#39;/t&#39;</span><span class="p">:</span>  <span class="c1"># topological search</span>
+        <span class="k">return</span> <span class="n">get_topological_search</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;invalid command </span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">command</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_eval_search">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_eval_search">[docs]</a>
+<span class="k">def</span> <span class="nf">get_eval_search</span><span class="p">(</span><span class="n">expression</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a function of a node that evaluates the given expression.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="s1">&#39;&lt;string&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">SyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;compiling expression: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">safer_eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;node&#39;</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span> <span class="s1">&#39;parent&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">up</span><span class="p">,</span> <span class="s1">&#39;up&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">up</span><span class="p">,</span>
+        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;is_leaf&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">,</span>
+        <span class="s1">&#39;length&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="s1">&#39;dist&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span>
+        <span class="s1">&#39;properties&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">props</span><span class="p">,</span> <span class="s1">&#39;props&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">props</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">props</span><span class="p">,</span>
+        <span class="s1">&#39;get&#39;</span><span class="p">:</span> <span class="nb">dict</span><span class="o">.</span><span class="n">get</span><span class="p">,</span>
+        <span class="s1">&#39;children&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">,</span> <span class="s1">&#39;ch&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">,</span>
+        <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="s1">&#39;dx&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;dy&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="s1">&#39;regex&#39;</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">,</span>
+        <span class="s1">&#39;startswith&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="o">.</span><span class="n">startswith</span><span class="p">,</span> <span class="s1">&#39;endswith&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="o">.</span><span class="n">endswith</span><span class="p">,</span>
+        <span class="s1">&#39;upper&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="s1">&#39;lower&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="s1">&#39;split&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="o">.</span><span class="n">split</span><span class="p">,</span>
+        <span class="s1">&#39;any&#39;</span><span class="p">:</span> <span class="nb">any</span><span class="p">,</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span> <span class="nb">all</span><span class="p">,</span> <span class="s1">&#39;len&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">,</span>
+        <span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">,</span> <span class="s1">&#39;abs&#39;</span><span class="p">:</span> <span class="nb">abs</span><span class="p">,</span> <span class="s1">&#39;float&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;pi&#39;</span><span class="p">:</span> <span class="n">pi</span><span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="safer_eval">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.safer_eval">[docs]</a>
+<span class="k">def</span> <span class="nf">safer_eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a safer version of eval(code, context).&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">code</span><span class="o">.</span><span class="n">co_names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">context</span><span class="p">:</span>
+            <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;invalid use of </span><span class="si">%r</span><span class="s1"> during evaluation&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;__builtins__&#39;</span><span class="p">:</span> <span class="p">{}},</span> <span class="n">context</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_topological_search">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_topological_search">[docs]</a>
+<span class="k">def</span> <span class="nf">get_topological_search</span><span class="p">(</span><span class="n">pattern</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a function of a node that sees if it matches the given pattern.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tree_pattern</span> <span class="o">=</span> <span class="n">tm</span><span class="o">.</span><span class="n">TreePattern</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">newick</span><span class="o">.</span><span class="n">NewickError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s1">&#39;invalid pattern </span><span class="si">%r</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">tm</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">tree_pattern</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># Add trees.</span>
+
+<div class="viewcode-block" id="add_trees_from_request">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.add_trees_from_request">[docs]</a>
+<span class="k">def</span> <span class="nf">add_trees_from_request</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add trees to the global var g_trees and return a dict of {name: id}.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">content_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;application/json&#39;</span><span class="p">):</span>
+            <span class="n">trees</span> <span class="o">=</span> <span class="p">[</span><span class="n">req_json</span><span class="p">()]</span>  <span class="c1"># we have only one tree</span>
+            <span class="n">parser</span> <span class="o">=</span> <span class="n">newick</span><span class="o">.</span><span class="n">PARSER_DEFAULT</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">trees</span> <span class="o">=</span> <span class="n">get_trees_from_form</span><span class="p">()</span>
+            <span class="n">parser</span> <span class="o">=</span> <span class="n">get_parser</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">forms</span><span class="p">[</span><span class="s1">&#39;internal&#39;</span><span class="p">])</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">trees</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">newick</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tree</span><span class="p">[</span><span class="s1">&#39;newick&#39;</span><span class="p">],</span> <span class="n">parser</span><span class="p">)</span>
+            <span class="n">ops</span><span class="o">.</span><span class="n">update_sizes_all</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">tree</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>  <span class="c1"># &quot;,&quot; is used for subtrees</span>
+            <span class="n">names</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>  <span class="c1"># tree ids are already equal to their names...</span>
+            <span class="n">g_trees</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
+            <span class="n">g_layouts</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">BASIC_LAYOUT</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">names</span>
+        <span class="c1"># TODO: tree ids are already equal to their names, so in the future</span>
+        <span class="c1"># we could remove the need to send back their &quot;ids&quot;.</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">newick</span><span class="o">.</span><span class="n">NewickError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;malformed tree - </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_parser">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_parser">[docs]</a>
+<span class="k">def</span> <span class="nf">get_parser</span><span class="p">(</span><span class="n">internal</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return parser given the internal nodes main property interpretation.&quot;&quot;&quot;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">newick</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="s1">&#39;support&#39;</span><span class="p">:</span> <span class="n">newick</span><span class="o">.</span><span class="n">SUPPORT</span><span class="p">}[</span><span class="n">internal</span><span class="p">]</span>  <span class="c1"># (()p:d);</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">newick</span><span class="o">.</span><span class="n">PARSER_DEFAULT</span><span class="p">,</span> <span class="n">internal</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="n">newick</span><span class="o">.</span><span class="n">DIST</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="get_trees_from_form">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_trees_from_form">[docs]</a>
+<span class="k">def</span> <span class="nf">get_trees_from_form</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return list of dicts with tree info read from a form in the request.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;trees&#39;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">files</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">fu</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">files</span><span class="p">[</span><span class="s1">&#39;trees&#39;</span><span class="p">]</span>  <span class="c1"># bottle FileUpload object</span>
+            <span class="k">return</span> <span class="n">get_trees_from_file</span><span class="p">(</span><span class="n">fu</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">fu</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">gzip</span><span class="o">.</span><span class="n">BadGzipFile</span><span class="p">,</span> <span class="ne">UnicodeDecodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">abort</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;when reading </span><span class="si">{</span><span class="n">fupload</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">forms</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+                 <span class="s1">&#39;newick&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">forms</span><span class="p">[</span><span class="s1">&#39;newick&#39;</span><span class="p">]}]</span></div>
+
+
+
+<div class="viewcode-block" id="get_trees_from_file">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_trees_from_file">[docs]</a>
+<span class="k">def</span> <span class="nf">get_trees_from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">fileobject</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return list of {&#39;name&#39;: ..., &#39;newick&#39;: ...} extracted from file.&quot;&quot;&quot;</span>
+    <span class="n">fileobject</span> <span class="o">=</span> <span class="n">fileobject</span> <span class="ow">or</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+
+    <span class="n">trees</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="n">btext</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fname</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># /d/n.e -&gt; n</span>
+        <span class="n">trees</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">get_trees_from_nexus_or_newick</span><span class="p">(</span><span class="n">btext</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.zip&#39;</span><span class="p">):</span>
+        <span class="n">zf</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">fileobject</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
+            <span class="n">extend</span><span class="p">(</span><span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fname</span><span class="p">),</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.tar&#39;</span><span class="p">):</span>
+        <span class="n">tf</span> <span class="o">=</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">TarFile</span><span class="p">(</span><span class="n">fileobj</span><span class="o">=</span><span class="n">fileobject</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">getnames</span><span class="p">():</span>
+            <span class="n">extend</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.tar.gz&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.tgz&#39;</span><span class="p">):</span>
+        <span class="n">tf</span> <span class="o">=</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">TarFile</span><span class="p">(</span><span class="n">fileobj</span><span class="o">=</span><span class="n">gzip</span><span class="o">.</span><span class="n">GzipFile</span><span class="p">(</span><span class="n">fileobj</span><span class="o">=</span><span class="n">fileobject</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">tf</span><span class="o">.</span><span class="n">getnames</span><span class="p">():</span>
+            <span class="n">extend</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.gz&#39;</span><span class="p">):</span>
+        <span class="n">extend</span><span class="p">(</span><span class="n">gzip</span><span class="o">.</span><span class="n">GzipFile</span><span class="p">(</span><span class="n">fileobj</span><span class="o">=</span><span class="n">fileobject</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.bz2&#39;</span><span class="p">):</span>
+        <span class="n">extend</span><span class="p">(</span><span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="n">fileobject</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">extend</span><span class="p">(</span><span class="n">fileobject</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">trees</span></div>
+
+
+
+<div class="viewcode-block" id="get_trees_from_nexus_or_newick">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_trees_from_nexus_or_newick">[docs]</a>
+<span class="k">def</span> <span class="nf">get_trees_from_nexus_or_newick</span><span class="p">(</span><span class="n">btext</span><span class="p">,</span> <span class="n">name_newick</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return list of {&#39;name&#39;: ..., &#39;newick&#39;: ...} extracted from btext.&quot;&quot;&quot;</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">btext</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>  <span class="c1"># we first try to read it as a nexus file</span>
+        <span class="n">trees</span> <span class="o">=</span> <span class="n">nexus</span><span class="o">.</span><span class="n">get_trees</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;newick&#39;</span><span class="p">:</span> <span class="n">nw</span><span class="p">}</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">nw</span> <span class="ow">in</span> <span class="n">trees</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+    <span class="k">except</span> <span class="n">nexus</span><span class="o">.</span><span class="n">NexusError</span><span class="p">:</span>  <span class="c1"># if it isn&#39;t, we assume the text is a newick</span>
+        <span class="k">return</span> <span class="p">[{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name_newick</span><span class="p">,</span> <span class="s1">&#39;newick&#39;</span><span class="p">:</span> <span class="n">text</span><span class="p">}]</span>  <span class="c1"># only one tree!</span></div>
+
+
+
+<span class="c1"># Explore.</span>
+
+<div class="viewcode-block" id="explore">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.explore">[docs]</a>
+<span class="k">def</span> <span class="nf">explore</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layouts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">host</span><span class="o">=</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">compress</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep_server</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">open_browser</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the web server, add tree and open a browser to visualize it.&quot;&quot;&quot;</span>
+    <span class="n">add_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">layouts</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">compress</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">g_config</span><span class="p">[</span><span class="s1">&#39;compress&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">compress</span>  <span class="c1"># global configuration</span>
+
+    <span class="c1"># Launch the thread with the http server (if not already running).</span>
+    <span class="k">if</span> <span class="s1">&#39;server&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">g_threads</span><span class="p">:</span>
+        <span class="n">thread</span><span class="p">,</span> <span class="n">server</span> <span class="o">=</span> <span class="n">start_server</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">verbose</span><span class="p">,</span> <span class="n">keep_server</span><span class="p">)</span>
+        <span class="n">g_threads</span><span class="p">[</span><span class="s1">&#39;server&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">thread</span><span class="p">,</span> <span class="n">server</span><span class="p">)</span>
+        <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">server_address</span>  <span class="c1"># port may have changed</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Explorer now available at http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s1">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">server</span> <span class="o">=</span> <span class="n">g_threads</span><span class="p">[</span><span class="s1">&#39;server&#39;</span><span class="p">]</span>
+        <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">server_address</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Existing explorer available at http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s1">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">open_browser</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">server</span> <span class="o">=</span> <span class="n">g_threads</span><span class="p">[</span><span class="s1">&#39;server&#39;</span><span class="p">]</span>
+        <span class="n">host</span><span class="p">,</span> <span class="n">port</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">server_address</span>
+        <span class="n">open_browser_window</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="add_tree">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.add_tree">[docs]</a>
+<span class="k">def</span> <span class="nf">add_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layouts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add tree, layouts, etc to the global variables, and return its name.&quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">make_name</span><span class="p">()</span>  <span class="c1"># in case we didn&#39;t receive one</span>
+
+    <span class="n">ops</span><span class="o">.</span><span class="n">update_sizes_all</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span>  <span class="c1"># update all internal sizes (ready to draw!)</span>
+
+    <span class="n">g_trees</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tree</span>  <span class="c1"># add tree to the global dict of trees</span>
+
+    <span class="n">g_layouts</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">layouts</span> <span class="k">if</span> <span class="n">layouts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">BASIC_LAYOUT</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">extra_style</span><span class="p">:</span>
+        <span class="n">style</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">extra_style</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">g_layouts</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Layout</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;extra arguments&#39;</span><span class="p">,</span> <span class="n">draw_tree</span><span class="o">=</span><span class="n">style</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">name</span></div>
+
+
+
+<div class="viewcode-block" id="remove_tree">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.remove_tree">[docs]</a>
+<span class="k">def</span> <span class="nf">remove_tree</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove all global references to the tree.&quot;&quot;&quot;</span>
+    <span class="n">g_trees</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">g_layouts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="start_server">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.start_server">[docs]</a>
+<span class="k">def</span> <span class="nf">start_server</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">keep_server</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a thread running the web server and return it and the server.&quot;&quot;&quot;</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="n">port</span> <span class="ow">or</span> <span class="n">get_next_available_port</span><span class="p">(</span><span class="n">host</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">port</span><span class="p">,</span> <span class="s1">&#39;could not find any port available&#39;</span>
+
+    <span class="c1"># Override the function that logs requests, if we are not verbose.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">WSGIRequestHandler</span><span class="o">.</span><span class="n">log_request</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="kc">None</span>
+
+    <span class="c1"># Create explicitly the web sever (uses internally WSGIRequestHandler).</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">make_server</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">default_app</span><span class="p">())</span>
+
+    <span class="n">thread</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span>
+        <span class="n">daemon</span><span class="o">=</span><span class="ow">not</span> <span class="n">keep_server</span><span class="p">,</span>  <span class="c1"># the server persists if it&#39;s not a daemon</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">server</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">)</span>
+
+    <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">thread</span><span class="p">,</span> <span class="n">server</span></div>
+
+
+
+<div class="viewcode-block" id="get_next_available_port">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_next_available_port">[docs]</a>
+<span class="k">def</span> <span class="nf">get_next_available_port</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">port_min</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span> <span class="n">port_max</span><span class="o">=</span><span class="mi">6000</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the next available port where we can put a server socket.&quot;&quot;&quot;</span>
+    <span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">port</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">port_min</span><span class="p">,</span> <span class="n">port_max</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">bind</span><span class="p">((</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span>  <span class="c1"># try to bind to the specified port</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">port</span>
+        <span class="k">except</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="make_name">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.make_name">[docs]</a>
+<span class="k">def</span> <span class="nf">make_name</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a unique tree name like &#39;tree-&lt;number&gt;&#39;.&quot;&quot;&quot;</span>
+    <span class="n">tnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">g_trees</span>
+              <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;tree-&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;tree-&#39;</span><span class="p">):]</span><span class="o">.</span><span class="n">isdecimal</span><span class="p">()]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;tree-&#39;</span><span class="p">):])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">tnames</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;tree-</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s1">&#39;</span></div>
+
+
+
+<div class="viewcode-block" id="open_browser_window">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.open_browser_window">[docs]</a>
+<span class="k">def</span> <span class="nf">open_browser_window</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">5000</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try to open a browser window in a different process.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;http://</span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="s1">:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">webbrowser</span><span class="o">.</span><span class="n">Error</span><span class="p">:</span>
+        <span class="k">pass</span>  <span class="c1"># it&#39;s ok if we don&#39;t succeed</span></div>
+
+
+
+<div class="viewcode-block" id="stop_server">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.stop_server">[docs]</a>
+<span class="k">def</span> <span class="nf">stop_server</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stop the running server.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;server&#39;</span> <span class="ow">in</span> <span class="n">g_threads</span><span class="p">:</span>
+        <span class="c1"># Without a server, we won&#39;t need to remember anything about the trees.</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">g_trees</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># copied so g_trees can be modified</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">remove_tree</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># Find the thread with the server and do a proper shutdown.</span>
+        <span class="n">thread</span><span class="p">,</span> <span class="n">server</span> <span class="o">=</span> <span class="n">g_threads</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;server&#39;</span><span class="p">)</span>
+
+        <span class="n">server</span><span class="o">.</span><span class="n">server_close</span><span class="p">()</span>
+        <span class="n">server</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+        <span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span></div>
+
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span class="n">fmt</span><span class="p">)</span>
+    <span class="n">add</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span>  <span class="c1"># shortcut</span>
+    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;FILE&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;file with the newick tree representation&#39;</span><span class="p">)</span>
+    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="s1">&#39;--internal&#39;</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;support&#39;</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;support&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;how to interpret the content of internal nodes&#39;</span><span class="p">)</span>
+    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="s1">&#39;--compress&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;send compressed data&#39;</span><span class="p">)</span>
+    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;-p&#39;</span><span class="p">,</span> <span class="s1">&#39;--port&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;server port number&#39;</span><span class="p">)</span>
+    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;be verbose&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Read tree(s) and add them to g_trees.</span>
+        <span class="k">for</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">get_trees_from_file</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">FILE</span><span class="p">):</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">newick</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tree</span><span class="p">[</span><span class="s1">&#39;newick&#39;</span><span class="p">],</span> <span class="n">get_parser</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">internal</span><span class="p">))</span>
+            <span class="n">ops</span><span class="o">.</span><span class="n">update_sizes_all</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">tree</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>  <span class="c1"># &quot;,&quot; is used for subtrees</span>
+            <span class="n">g_trees</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
+            <span class="n">g_layouts</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">BASIC_LAYOUT</span><span class="p">]</span>
+
+        <span class="c1"># Set the global config options.</span>
+        <span class="n">g_config</span><span class="p">[</span><span class="s1">&#39;compress&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">compress</span>
+
+        <span class="c1"># Launch the http server in a thread and open the browser.</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">port</span> <span class="ow">or</span> <span class="n">get_next_available_port</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">port</span><span class="p">,</span> <span class="s1">&#39;could not find any port available&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="n">WSGIRequestHandler</span><span class="o">.</span><span class="n">log_request</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="kc">None</span>
+        <span class="n">server</span> <span class="o">=</span> <span class="n">make_server</span><span class="p">(</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">default_app</span><span class="p">())</span>
+        <span class="n">Thread</span><span class="p">(</span><span class="n">daemon</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">server</span><span class="o">.</span><span class="n">serve_forever</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="n">open_browser_window</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Explorer available at http://127.0.0.1:</span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">input</span><span class="p">(</span><span class="s1">&#39;Press enter to stop the server and finish.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="n">newick</span><span class="o">.</span><span class="n">NewickError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error using tree from </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">FILE</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error listening at port </span><span class="si">{</span><span class="n">port</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyboardInterrupt</span><span class="p">,</span> <span class="ne">EOFError</span><span class="p">):</span>
+        <span class="k">pass</span>  <span class="c1"># bye!</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">ETE Toolkit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faqs.html">Frequently Asked Questions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2008 - 2024, The ETE Toolkit Team.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

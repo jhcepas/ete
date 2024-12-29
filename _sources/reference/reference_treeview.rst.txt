@@ -61,9 +61,6 @@ Faces
 .. autoclass:: PieChartFace
    :members:
 
-.. autoclass:: ProfileFace
-   :members:
-
 .. autoclass:: TreeFace
    :members:
 

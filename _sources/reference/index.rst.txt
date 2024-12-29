@@ -8,7 +8,6 @@ Reference Guide
    reference_operations
    reference_parsers
    reference_phylo
-   reference_clustering
    reference_seqgroup
    reference_taxonomy
    reference_smartview

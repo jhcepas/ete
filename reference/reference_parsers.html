@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Parsers &#8212; ETE Toolkit 4.0.0-beta2 documentation</title>
+    <title>Parsers &#8212; ETE Toolkit 4.0.0-beta3 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
-    <script src="../_static/documentation_options.js?v=382e6e0c"></script>
+    <script src="../_static/documentation_options.js?v=9c56ea15"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="icon" href="../_static/favicon.ico"/>
@@ -69,19 +69,9 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ete4.parser.newick.get_extended_props">
-<span class="sig-name descname"><span class="pre">get_extended_props</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.get_extended_props" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_extended_props</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unicode</span> <span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.get_extended_props" title="Link to this definition">¶</a></dt>
 <dd><p>Return a dict with the properties extracted from the text in NHX format.</p>
 <p>Example: ‘&amp;&amp;NHX:x=foo:y=bar’  -&gt;  {‘x’: ‘foo’, ‘y’: ‘bar’}</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="ete4.parser.newick.get_props">
-<span class="sig-name descname"><span class="pre">get_props</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_leaf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.get_props" title="Link to this definition">¶</a></dt>
-<dd><p>Return the properties from the content (as a newick) of a node.</p>
-<dl class="simple">
-<dt>Example (for the default format of a leaf node):</dt><dd><p>‘abc:123[&amp;&amp;NHX:x=foo]’  -&gt;  {‘name’: ‘abc’, ‘dist’: 123, ‘x’: ‘foo’}</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -91,14 +81,14 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ete4.parser.newick.loads">
-<span class="sig-name descname"><span class="pre">loads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree_text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tree_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Tree</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.loads" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unicode</span> <span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parser=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tree_class=Tree</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.loads" title="Link to this definition">¶</a></dt>
 <dd><p>Return tree from its newick representation.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ete4.parser.newick.make_parser">
-<span class="sig-name descname"><span class="pre">make_parser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%g'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">support</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%g'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.make_parser" title="Link to this definition">¶</a></dt>
-<dd><p>Return “int” parser changing the format of name, dist or support.</p>
+<span class="sig-name descname"><span class="pre">make_parser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%g'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">support</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%g'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.make_parser" title="Link to this definition">¶</a></dt>
+<dd><p>Return parser changing the format of properties name, dist or support.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -120,15 +110,37 @@
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="ete4.parser.newick.read_node">
+<span class="sig-name descname"><span class="pre">read_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unicode</span> <span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span> <span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dict</span> <span class="pre">parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tree_class=Tree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_req=True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.read_node" title="Link to this definition">¶</a></dt>
+<dd><p>Return a node and the position in the text where it ends.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="ete4.parser.newick.read_nodes">
-<span class="sig-name descname"><span class="pre">read_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes_text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span> <span class="pre">pos=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tree_class=Tree</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.read_nodes" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">read_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unicode</span> <span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span> <span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dict</span> <span class="pre">parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tree_class=Tree</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.read_nodes" title="Link to this definition">¶</a></dt>
 <dd><p>Return a list of nodes and the position in the text where they end.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ete4.parser.newick.read_props">
+<span class="sig-name descname"><span class="pre">read_props</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unicode</span> <span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span> <span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_leaf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dict</span> <span class="pre">parser</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_req</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.read_props" title="Link to this definition">¶</a></dt>
+<dd><p>Return the properties from the content of a node, and where it ends.</p>
+<dl class="simple">
+<dt>Example (for the default format of a leaf node):</dt><dd><p>‘abc:123[&amp;&amp;NHX:x=foo]’  -&gt;  {‘name’: ‘abc’, ‘dist’: 123, ‘x’: ‘foo’}</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ete4.parser.newick.repr_short">
 <span class="sig-name descname"><span class="pre">repr_short</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.repr_short" title="Link to this definition">¶</a></dt>
 <dd><p>Return a representation of the given object, limited in length.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ete4.parser.newick.skip_content">
+<span class="sig-name descname"><span class="pre">skip_content</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unicode</span> <span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span> <span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endings=u'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">);'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.skip_content" title="Link to this definition">¶</a></dt>
+<dd><p>Return the position where the content ends.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -139,7 +151,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ete4.parser.newick.skip_spaces_and_comments">
-<span class="sig-name descname"><span class="pre">skip_spaces_and_comments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span> <span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.skip_spaces_and_comments" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">skip_spaces_and_comments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unicode</span> <span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long</span> <span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ete4.parser.newick.skip_spaces_and_comments" title="Link to this definition">¶</a></dt>
 <dd><p>Return position in text after pos and all whitespaces and comments.</p>
 </dd></dl>
 
@@ -236,7 +248,6 @@
 <li class="toctree-l2"><a class="reference internal" href="reference_operations.html">Tree operations</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Parsers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference_phylo.html">Phylogenetic trees</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference_clustering.html">Clustering</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference_seqgroup.html">Multiple Sequence Alignments (SeqGroup)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference_taxonomy.html">Taxonomy databases</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference_smartview.html">Smartview (web graphics)</a></li>
@@ -271,7 +282,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2008 - 2023, The ETE Toolkit Team.
+      &#169;2008 - 2024, The ETE Toolkit Team.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
