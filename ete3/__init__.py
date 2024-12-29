@@ -56,7 +56,7 @@ from .evol.evoltree import *
 try:
     from .webplugin.webapp import *
 except (ModuleNotFoundError, ImportError) as e:
-    warn("web plugin not available for Python >= 3.13")
+    warn("ete web plugin not available for Python >= 3.13")
 from .phyloxml import Phyloxml, PhyloxmlTree
 from .nexml import Nexml, NexmlTree
 from .evol import EvolTree
