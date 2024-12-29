@@ -53,7 +53,10 @@ from .coretype.tree import *
 from .coretype.seqgroup import *
 from .phylo.phylotree import *
 from .evol.evoltree import *
-from .webplugin.webapp import *
+try:
+    from .webplugin.webapp import *
+except (ModuleNotFoundError, ImportError) as e:
+    warn("ete web plugin not available for Python >= 3.13")
 from .phyloxml import Phyloxml, PhyloxmlTree
 from .nexml import Nexml, NexmlTree
 from .evol import EvolTree
