@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ete4.gtdb_taxonomy.gtdbquery &#8212; ETE Toolkit 4.0.0-beta3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=686e5160" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
     <script src="../../../_static/documentation_options.js?v=9c56ea15"></script>
@@ -35,21 +35,21 @@
   <h1>Source code for ete4.gtdb_taxonomy.gtdbquery</h1><div class="highlight"><pre>
 <span></span><span class="ch">#!/usr/bin/env python3</span>
 
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
-<span class="kn">import</span> <span class="nn">pickle</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">Counter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">Counter</span>
 
-<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">md5</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">hashlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">md5</span>
 
-<span class="kn">import</span> <span class="nn">sqlite3</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">tarfile</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
-<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sqlite3</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
 
-<span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">ETE_DATA_HOME</span><span class="p">,</span> <span class="n">update_ete_data</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">ETE_DATA_HOME</span><span class="p">,</span> <span class="n">update_ete_data</span>
 
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;GTDBTaxa&quot;</span><span class="p">,</span> <span class="s2">&quot;is_taxadb_up_to_date&quot;</span><span class="p">]</span>
@@ -58,7 +58,7 @@
 <span class="n">DEFAULT_GTDBTAXADB</span> <span class="o">=</span> <span class="n">ETE_DATA_HOME</span> <span class="o">+</span> <span class="s1">&#39;/gtdbtaxa.sqlite&#39;</span>
 <span class="n">DEFAULT_GTDBTAXADUMP</span> <span class="o">=</span> <span class="n">ETE_DATA_HOME</span> <span class="o">+</span> <span class="s1">&#39;/gtdbdump.tar.gz&#39;</span>
 
-<span class="k">def</span> <span class="nf">is_taxadb_up_to_date</span><span class="p">(</span><span class="n">dbfile</span><span class="o">=</span><span class="n">DEFAULT_GTDBTAXADB</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_taxadb_up_to_date</span><span class="p">(</span><span class="n">dbfile</span><span class="o">=</span><span class="n">DEFAULT_GTDBTAXADB</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a valid and up-to-date gtdbtaxa.sqlite database exists</span>
 <span class="sd">    If dbfile= is not specified, DEFAULT_TAXADB is assumed</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -78,14 +78,14 @@
 
 <div class="viewcode-block" id="GTDBTaxa">
 <a class="viewcode-back" href="../../../reference/reference_taxonomy.html#ete4.GTDBTaxa">[docs]</a>
-<span class="k">class</span> <span class="nc">GTDBTaxa</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GTDBTaxa</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Local transparent connector to the GTDB taxonomy database.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="GTDBTaxa.__init__">
 <a class="viewcode-back" href="../../../reference/reference_taxonomy.html#ete4.GTDBTaxa.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dbfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">taxdump_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">memory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dbfile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">taxdump_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">memory</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">dbfile</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dbfile</span> <span class="o">=</span> <span class="n">DEFAULT_GTDBTAXADB</span>
@@ -121,7 +121,7 @@
 
 <div class="viewcode-block" id="GTDBTaxa.update_taxonomy_database">
 <a class="viewcode-back" href="../../../reference/reference_taxonomy.html#ete4.GTDBTaxa.update_taxonomy_database">[docs]</a>
-    <span class="k">def</span> <span class="nf">update_taxonomy_database</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxdump_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_taxonomy_database</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxdump_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the GTDB taxonomy database.</span>
 
 <span class="sd">        It updates it by downloading and parsing the latest</span>
@@ -132,10 +132,10 @@
         <span class="n">update_db</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbfile</span><span class="p">,</span> <span class="n">targz_file</span><span class="o">=</span><span class="n">taxdump_file</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">db</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbfile</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_translate_merged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_taxids</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_translate_merged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_taxids</span><span class="p">):</span>
         <span class="n">conv_all_taxids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">all_taxids</span><span class="p">))))</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;select taxid_old, taxid_new FROM merged WHERE taxid_old IN (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">all_taxids</span><span class="p">))</span>
 
@@ -188,7 +188,7 @@
 
     <span class="c1">#     return taxid, spname, norm_score</span>
 
-    <span class="k">def</span> <span class="nf">_get_id2rank</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">internal_taxids</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_id2rank</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">internal_taxids</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Given a list of numeric ids (each one representing a taxa in GTDB), return a dictionary with their corresponding ranks.</span>
 <span class="sd">        Examples:</span>
 <span class="sd">        &gt; gtdb.get_rank([2174, 205487, 610])</span>
@@ -202,7 +202,7 @@
 
 <div class="viewcode-block" id="GTDBTaxa.get_rank">
 <a class="viewcode-back" href="../../../reference/reference_taxonomy.html#ete4.GTDBTaxa.get_rank">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxids</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxids</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Give a list of GTDB string taxids, return a dictionary with their corresponding ranks.</span>
 <span class="sd">        Examples:</span>
 
@@ -222,7 +222,7 @@
         <span class="k">return</span> <span class="n">taxid2rank</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_lineage_translator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxids</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_lineage_translator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxids</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Given a valid taxid number, return its corresponding lineage track as a</span>
 <span class="sd">        hierarchically sorted list of parent taxids.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -238,7 +238,7 @@
 
 <div class="viewcode-block" id="GTDBTaxa.get_name_lineage">
 <a class="viewcode-back" href="../../../reference/reference_taxonomy.html#ete4.GTDBTaxa.get_name_lineage">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_name_lineage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxnames</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_name_lineage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxnames</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Given a valid taxname, return its corresponding lineage track as a</span>
 <span class="sd">        hierarchically sorted list of parent taxnames.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -252,7 +252,7 @@
         <span class="k">return</span> <span class="n">name_lineages</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_lineage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxid</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_lineage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxid</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Given a valid taxid number, return its corresponding lineage track as a</span>
 <span class="sd">        hierarchically sorted list of parent taxids.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -279,7 +279,7 @@
 
 <div class="viewcode-block" id="GTDBTaxa.get_common_names">
 <a class="viewcode-back" href="../../../reference/reference_taxonomy.html#ete4.GTDBTaxa.get_common_names">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_common_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxids</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_common_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxids</span><span class="p">):</span>
         <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">taxids</span><span class="p">])</span>
         <span class="n">cmd</span> <span class="o">=</span> <span class="s2">&quot;select taxid, common FROM species WHERE taxid IN (</span><span class="si">%s</span><span class="s2">);&quot;</span> <span class="o">%</span><span class="n">query</span>
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
@@ -290,7 +290,7 @@
         <span class="k">return</span> <span class="n">id2name</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_get_taxid_translator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxids</span><span class="p">,</span> <span class="n">try_synonyms</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_taxid_translator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxids</span><span class="p">,</span> <span class="n">try_synonyms</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Given a list of taxids, returns a dictionary with their corresponding</span>
 <span class="sd">        scientific names.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -320,7 +320,7 @@
 
         <span class="k">return</span> <span class="n">id2name</span>
 
-    <span class="k">def</span> <span class="nf">_get_name_translator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_name_translator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a list of taxid scientific names, returns a dictionary translating them into their corresponding taxids.</span>
 <span class="sd">        Exact name match is required for translation.</span>
@@ -351,7 +351,7 @@
                 <span class="c1">#name2realname[oname] = sp</span>
         <span class="k">return</span> <span class="n">name2id</span>
 
-    <span class="k">def</span> <span class="nf">_translate_to_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxids</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_translate_to_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxids</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given a list of taxid numbers, returns another list with their corresponding scientific names.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -364,7 +364,7 @@
 
 <div class="viewcode-block" id="GTDBTaxa.get_descendant_taxa">
 <a class="viewcode-back" href="../../../reference/reference_taxonomy.html#ete4.GTDBTaxa.get_descendant_taxa">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_descendant_taxa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">intermediate_nodes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rank_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">collapse_subspecies</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_tree</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_descendant_taxa</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">,</span> <span class="n">intermediate_nodes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rank_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">collapse_subspecies</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_tree</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        given a parent taxid or scientific species name, returns a list of all its descendants taxids.</span>
 <span class="sd">        If intermediate_nodes is set to True, internal nodes will also be dumped.</span>
@@ -418,7 +418,7 @@
 
 <div class="viewcode-block" id="GTDBTaxa.get_topology">
 <a class="viewcode-back" href="../../../reference/reference_taxonomy.html#ete4.GTDBTaxa.get_topology">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_topology</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxnames</span><span class="p">,</span> <span class="n">intermediate_nodes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rank_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_topology</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">taxnames</span><span class="p">,</span> <span class="n">intermediate_nodes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rank_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">collapse_subspecies</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">annotate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return minimal pruned GTDB taxonomy tree containing all given taxids.</span>
 
@@ -434,7 +434,7 @@
 <span class="sd">            species rank will be collapsed into the species upper</span>
 <span class="sd">            node.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">PhyloTree</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">..</span><span class="w"> </span><span class="kn">import</span> <span class="n">PhyloTree</span>
         <span class="c1">#taxids, merged_conversion = self._translate_merged(taxids)</span>
         <span class="n">tax2id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_name_translator</span><span class="p">(</span><span class="n">taxnames</span><span class="p">)</span> <span class="c1">#{&#39;f__Korarchaeaceae&#39;: [2174], &#39;o__Peptococcales&#39;: [205487], &#39;p__Huberarchaeota&#39;: [610]}</span>
         <span class="n">taxids</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tax2id</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
@@ -539,7 +539,7 @@
 
 <div class="viewcode-block" id="GTDBTaxa.annotate_tree">
 <a class="viewcode-back" href="../../../reference/reference_taxonomy.html#ete4.GTDBTaxa.annotate_tree">[docs]</a>
-    <span class="k">def</span> <span class="nf">annotate_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">taxid_attr</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">tax2name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">annotate_tree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">taxid_attr</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="n">tax2name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">tax2track</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tax2rank</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore_unclassified</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Annotate a tree containing taxids as leaf names.</span>
 
@@ -649,7 +649,7 @@
         <span class="k">return</span> <span class="n">tax2name</span><span class="p">,</span> <span class="n">tax2track</span><span class="p">,</span> <span class="n">tax2rank</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_common_lineage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_common_lineage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
         <span class="n">occurrence</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
         <span class="n">pos</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">:</span>
@@ -697,7 +697,7 @@
 
 <div class="viewcode-block" id="GTDBTaxa.get_broken_branches">
 <a class="viewcode-back" href="../../../reference/reference_taxonomy.html#ete4.GTDBTaxa.get_broken_branches">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_broken_branches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">taxa_lineages</span><span class="p">,</span> <span class="n">n2content</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_broken_branches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">taxa_lineages</span><span class="p">,</span> <span class="n">n2content</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a list of GTDB lineage names that are not monophyletic in the</span>
 <span class="sd">        provided tree, as well as the list of affected branches and their size.</span>
 <span class="sd">        CURRENTLY EXPERIMENTAL</span>
@@ -754,8 +754,8 @@
     <span class="c1">#     return self.annotate_tree(t, tax2name, tax2track, attr_name=&quot;taxid&quot;)</span>
 
 
-<span class="k">def</span> <span class="nf">load_gtdb_tree_from_dump</span><span class="p">(</span><span class="n">tar</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">Tree</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_gtdb_tree_from_dump</span><span class="p">(</span><span class="n">tar</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
     <span class="c1"># Download: gtdbdump/gtdbr202dump.tar.z</span>
     <span class="n">parent2child</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">name2node</span> <span class="o">=</span> <span class="p">{}</span>
@@ -800,7 +800,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">n</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">Tree</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">..</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
             <span class="n">n</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
         <span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">nodename</span>
         <span class="c1">#n.taxname = node2taxname[nodename]</span>
@@ -823,7 +823,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tree is loaded.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">t</span><span class="p">,</span> <span class="n">synonyms</span>
 
-<span class="k">def</span> <span class="nf">generate_table</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_table</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
     <span class="n">OUT</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;taxa.tab&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">traverse</span><span class="p">()):</span>
         <span class="k">if</span> <span class="n">j</span><span class="o">%</span><span class="mi">1000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -840,7 +840,7 @@
     <span class="n">OUT</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">update_db</span><span class="p">(</span><span class="n">dbfile</span><span class="p">,</span> <span class="n">targz_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_db</span><span class="p">(</span><span class="n">dbfile</span><span class="p">,</span> <span class="n">targz_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">basepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">dbfile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">basepath</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">basepath</span><span class="p">):</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">basepath</span><span class="p">)</span>
@@ -865,7 +865,7 @@
 
     <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;rm taxa.tab&quot;</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">update_local_taxdump</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">DEFAULT_GTDBTAXADUMP</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_local_taxdump</span><span class="p">(</span><span class="n">fname</span><span class="o">=</span><span class="n">DEFAULT_GTDBTAXADUMP</span><span class="p">):</span>
     <span class="c1"># latest version of gtdb taxonomy dump</span>
     <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/etetoolkit/ete-data/raw/main/gtdb_taxonomy/gtdblatest/gtdb_latest_dump.tar.gz&quot;</span>
 
@@ -884,7 +884,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;File </span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s1"> is already up-to-date with </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s1"> .&#39;</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">upload_data</span><span class="p">(</span><span class="n">dbfile</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">upload_data</span><span class="p">(</span><span class="n">dbfile</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Uploading to&#39;</span><span class="p">,</span> <span class="n">dbfile</span><span class="p">)</span>
     <span class="n">basepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">dbfile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>

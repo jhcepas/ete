@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Tree drawing and exploration (web) &#8212; ETE Toolkit 4.0.0-beta3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
     <script src="../_static/documentation_options.js?v=9c56ea15"></script>
@@ -99,8 +99,8 @@
 <p>We can represent and interact with a tree in a flexible way by using
 the <em>explorer</em> module.</p>
 <p>Let’s create a simple tree with 100 leaves and randomly populated:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">random</span>
-<span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">random</span><span class="w"> </span><span class="kn">import</span> <span class="n">random</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
 <span class="n">t</span><span class="o">.</span><span class="n">populate</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">dist_fn</span><span class="o">=</span><span class="n">random</span><span class="p">,</span> <span class="n">support_fn</span><span class="o">=</span><span class="n">random</span><span class="p">)</span>
 </pre></div>
@@ -210,7 +210,7 @@ or programatically by specifying an empty list of layouts:</p>
 </div>
 <p>So what happens when we are not explicitely passing the <cite>layouts</cite>
 argument? The explorer interprets it as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">BASIC_LAYOUT</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">BASIC_LAYOUT</span>
 <span class="n">t</span><span class="o">.</span><span class="n">explore</span><span class="p">(</span><span class="n">layouts</span><span class="o">=</span><span class="p">[</span><span class="n">BASIC_LAYOUT</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -371,8 +371,8 @@ are objects of the class <a class="reference internal" href="../reference/refere
 <li><p><code class="docutils literal notranslate"><span class="pre">active</span></code>: Whether the layout will be immediately active when exploring (defaults to True).</p></li>
 </ul>
 <p>Let’s look at how to use them. The simplest case is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
 <span class="n">t</span><span class="o">.</span><span class="n">populate</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
@@ -427,8 +427,8 @@ individual basis with the function <code class="docutils literal notranslate"><s
 <h4><a class="toc-backref" href="#id22" role="doc-backlink">Example of simple change</a><a class="headerlink" href="#example-of-simple-change" title="Link to this heading">¶</a></h4>
 <p>A simple way to control the tree style is to pass a dictionary with
 the options we want to <code class="docutils literal notranslate"><span class="pre">draw_tree</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">()</span>
 <span class="n">t</span><span class="o">.</span><span class="n">populate</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
@@ -480,8 +480,8 @@ there are also many more: <strong>fill-opacity</strong>, <strong>stroke-opacity<
 <section id="id1">
 <h4><a class="toc-backref" href="#id24" role="doc-backlink">Example of simple change</a><a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
 <p>A simple tree where we change the style for the leaves:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s1">&#39;((a,b),c);&#39;</span><span class="p">)</span>
 
@@ -495,7 +495,7 @@ there are also many more: <strong>fill-opacity</strong>, <strong>stroke-opacity<
                  <span class="s1">&#39;stroke-width&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
                  <span class="s1">&#39;stroke&#39;</span><span class="p">:</span> <span class="s1">&#39;#964B00&#39;</span><span class="p">}</span>
 
-<span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;dot&#39;</span><span class="p">:</span> <span class="n">style_dot</span><span class="p">,</span>
                 <span class="s1">&#39;hz-line&#39;</span><span class="p">:</span> <span class="n">style_hz_line</span><span class="p">}</span>
@@ -507,8 +507,8 @@ there are also many more: <strong>fill-opacity</strong>, <strong>stroke-opacity<
 <img alt="../_images/my_layout.png" src="../_images/my_layout.png" />
 <p>We can use different styles for different nodes. Let’s see a couple of
 examples:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s1">&#39;((a,b),c);&#39;</span><span class="p">)</span>
 
@@ -525,7 +525,7 @@ examples:</p>
                           <span class="s1">&#39;stroke-width&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
                           <span class="s1">&#39;stroke-dasharray&#39;</span><span class="p">:</span> <span class="s1">&#39;5,5&#39;</span><span class="p">}}</span>
 
-<span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">leaf_style</span>
     <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">is_root</span><span class="p">:</span>
@@ -536,14 +536,14 @@ examples:</p>
 </pre></div>
 </div>
 <img alt="../_images/draw_node.png" src="../_images/draw_node.png" />
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">BASIC_LAYOUT</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">BASIC_LAYOUT</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s1">&#39;((((a,b),c),d),e);&#39;</span><span class="p">)</span>
 
 <span class="n">vowels</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;u&#39;</span><span class="p">}</span>
 
-<span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">vowels</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;dot&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;radius&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">},</span>
@@ -578,12 +578,12 @@ represents a table in which faces can be placed with a
 of a given node, a pair of <code class="xref py py-class docutils literal notranslate"><span class="pre">TextFace</span></code> faces can
 be created and put into decorations for the columns 0 and 1 of the
 <strong>bottom</strong> area, which are returned by the function <code class="docutils literal notranslate"><span class="pre">draw_node</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">Decoration</span><span class="p">,</span> <span class="n">TextFace</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">Decoration</span><span class="p">,</span> <span class="n">TextFace</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s1">&#39;((a:1,b:1):1,c:1):1;&#39;</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_root</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Decoration</span><span class="p">(</span><span class="n">TextFace</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">}),</span>
                            <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">),</span>
@@ -596,7 +596,7 @@ be created and put into decorations for the columns 0 and 1 of the
 </div>
 <img alt="../_images/face_bottom.png" src="../_images/face_bottom.png" />
 <p>If we set the column of “world” to 0 too:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
 <span class="p">[</span><span class="o">...</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Decoration</span><span class="p">(</span><span class="n">TextFace</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">}),</span>
                            <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">),</span>
@@ -611,12 +611,12 @@ be created and put into decorations for the columns 0 and 1 of the
 be piled up.</p>
 <p>If the position is <strong>aligned</strong>, the face will be drawn in an aligned
 column. Let’s see an example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">Decoration</span><span class="p">,</span> <span class="n">TextFace</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">Decoration</span><span class="p">,</span> <span class="n">TextFace</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s1">&#39;((a,b),c);&#39;</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Decoration</span><span class="p">(</span><span class="n">TextFace</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">}),</span>
                            <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;aligned&#39;</span><span class="p">),</span>
@@ -649,12 +649,12 @@ we can fine-tune this behavior by passing a second argument to the
 collapsed (sibling) nodes at the time of the drawing, and it will be
 empty if the node is not collapsed. The function will look like
 <code class="docutils literal notranslate"><span class="pre">draw_node(node,</span> <span class="pre">collapsed)</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">Decoration</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">Decoration</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s1">&#39;((a:1,b:1)n1:1,c):1;&#39;</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;n1&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">collapsed</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Decoration</span><span class="p">(</span><span class="s1">&#39;n1 is collapsed&#39;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
@@ -678,8 +678,8 @@ will assume that we want a simple text face with that content.</p>
 drawing. We can find a complete list for each face in the
 <a class="reference internal" href="../reference/reference_smartview.html#module-ete4.smartview.faces" title="ete4.smartview.faces"><code class="xref py py-class docutils literal notranslate"><span class="pre">faces</span> <span class="pre">module</span> <span class="pre">documentation</span></code></a>.</p>
 <p>Let’s look at a simple example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">TextFace</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">TextFace</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s1">&#39;((a:1,b:1):1,c:1):1;&#39;</span><span class="p">)</span>
 
@@ -695,7 +695,7 @@ drawing. We can find a complete list for each face in the
 <span class="n">face_bottom</span><span class="o">.</span><span class="n">rotation</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">face_bottom</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="s1">&#39;font-family&#39;</span><span class="p">:</span> <span class="s1">&#39;sans-serif&#39;</span><span class="p">}</span>
 
-<span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">Decoration</span><span class="p">(</span><span class="n">face_top</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;top&#39;</span><span class="p">),</span>
             <span class="n">Decoration</span><span class="p">(</span><span class="n">face_bottom</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;bottom&#39;</span><span class="p">)]</span>
 
@@ -720,12 +720,12 @@ this way is the most efficient of all, so we will use it in the
 following examples.</p>
 <p>Let’s see an example combining styles and faces, for both the tree
 (with <code class="docutils literal notranslate"><span class="pre">draw_tree</span></code>) and the nodes (with <code class="docutils literal notranslate"><span class="pre">draw_node</span></code>):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">TextFace</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">TextFace</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s1">&#39;((((a,b),c),d),e);&#39;</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">draw_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_tree</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
     <span class="k">yield</span> <span class="n">Decoration</span><span class="p">(</span><span class="n">TextFace</span><span class="p">(</span><span class="s1">&#39;Vowel title&#39;</span><span class="p">,</span> <span class="n">fs_min</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">fs_max</span><span class="o">=</span><span class="mi">12</span><span class="p">),</span>
                      <span class="n">position</span><span class="o">=</span><span class="s1">&#39;header&#39;</span><span class="p">)</span>
     <span class="c1">#yield Decoration(LegendFace(&#39;My legend&#39;,</span>
@@ -734,7 +734,7 @@ following examples.</p>
 
 <span class="n">vowels</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;u&#39;</span><span class="p">}</span>
 
-<span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">:</span>
         <span class="k">return</span>
 
@@ -756,8 +756,8 @@ following examples.</p>
 <img alt="../_images/combined.png" src="../_images/combined.png" />
 <p>Let’s see another example, where we change the background of certain
 nodes that are common ancestors to other nodes we are interested in:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
-<span class="kn">from</span> <span class="nn">ete4.smartview</span> <span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">Decoration</span><span class="p">,</span> <span class="n">TextFace</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4.smartview</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">Decoration</span><span class="p">,</span> <span class="n">TextFace</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">Tree</span><span class="p">(</span><span class="s1">&#39;((((a1,a2),a3), ((b1,b2),(b3,b4))), ((c1,c2),c3));&#39;</span><span class="p">)</span>
 
@@ -773,7 +773,7 @@ nodes that are common ancestors to other nodes we are interested in:</p>
 <span class="n">n3</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">common_ancestor</span><span class="p">([</span><span class="s1">&#39;c1&#39;</span><span class="p">,</span> <span class="s1">&#39;c2&#39;</span><span class="p">,</span> <span class="s1">&#39;c3&#39;</span><span class="p">])</span>
 <span class="n">n4</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">common_ancestor</span><span class="p">([</span><span class="s1">&#39;b3&#39;</span><span class="p">,</span> <span class="s1">&#39;b4&#39;</span><span class="p">])</span>
 
-<span class="k">def</span> <span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_node</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
     <span class="c1"># Add node name with big text.</span>
     <span class="k">yield</span> <span class="n">Decoration</span><span class="p">(</span><span class="n">TextFace</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">fs_min</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">fs_max</span><span class="o">=</span><span class="mi">25</span><span class="p">),</span> <span class="n">position</span><span class="o">=</span><span class="s1">&#39;right&#39;</span><span class="p">)</span>
 

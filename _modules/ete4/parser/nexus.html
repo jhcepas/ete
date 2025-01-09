@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ete4.parser.nexus &#8212; ETE Toolkit 4.0.0-beta3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=686e5160" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
     <script src="../../../_static/documentation_options.js?v=9c56ea15"></script>
@@ -39,14 +39,14 @@
 
 <span class="c1"># See https://en.wikipedia.org/wiki/Nexus_file</span>
 
-<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">newick</span> <span class="k">as</span> <span class="n">newick_parser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">newick</span> <span class="k">as</span> <span class="n">newick_parser</span>
 
 
 <div class="viewcode-block" id="NexusError">
 <a class="viewcode-back" href="../../../reference/reference_parsers.html#ete4.parser.nexus.NexusError">[docs]</a>
-<span class="k">class</span> <span class="nc">NexusError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NexusError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="k">pass</span></div>
 
 
@@ -54,14 +54,14 @@
 
 <div class="viewcode-block" id="load">
 <a class="viewcode-back" href="../../../reference/reference_parsers.html#ete4.parser.nexus.load">[docs]</a>
-<span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">loads</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">parser</span><span class="o">=</span><span class="n">parser</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="loads">
 <a class="viewcode-back" href="../../../reference/reference_parsers.html#ete4.parser.nexus.loads">[docs]</a>
-<span class="k">def</span> <span class="nf">loads</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">loads</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">newick_parser</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">newick</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="n">parser</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">newick</span> <span class="ow">in</span> <span class="n">get_trees</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="n">parser</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
 
@@ -69,7 +69,7 @@
 
 <div class="viewcode-block" id="get_trees">
 <a class="viewcode-back" href="../../../reference/reference_parsers.html#ete4.parser.nexus.get_trees">[docs]</a>
-<span class="k">def</span> <span class="nf">get_trees</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_trees</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return trees as {name: newick} with all the name transformations done.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^#NEXUS\s*\n&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">NexusError</span><span class="p">(</span><span class="s1">&#39;text does not start with &quot;#NEXUS&quot;&#39;</span><span class="p">)</span>
@@ -101,7 +101,7 @@
 
 <div class="viewcode-block" id="apply_translations">
 <a class="viewcode-back" href="../../../reference/reference_parsers.html#ete4.parser.nexus.apply_translations">[docs]</a>
-<span class="k">def</span> <span class="nf">apply_translations</span><span class="p">(</span><span class="n">translate</span><span class="p">,</span> <span class="n">newick</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_translations</span><span class="p">(</span><span class="n">translate</span><span class="p">,</span> <span class="n">newick</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return newick with node names translated according to the given dict.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">translate</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">newick</span>
@@ -118,7 +118,7 @@
 
 <div class="viewcode-block" id="get_section">
 <a class="viewcode-back" href="../../../reference/reference_parsers.html#ete4.parser.nexus.get_section">[docs]</a>
-<span class="k">def</span> <span class="nf">get_section</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">section_name</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_section</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">section_name</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return commands ({name: [args]}) that correspond to the given section.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">get_sections</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section_name</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="p">{})</span></div>
 
@@ -126,7 +126,7 @@
 
 <div class="viewcode-block" id="get_sections">
 <a class="viewcode-back" href="../../../reference/reference_parsers.html#ete4.parser.nexus.get_sections">[docs]</a>
-<span class="k">def</span> <span class="nf">get_sections</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_sections</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return {section: commands} read from the full text of a nexus file.&quot;&quot;&quot;</span>
     <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\nBEGIN\s+(\w+)\s*;(.*?)\nEND\s*;&#39;</span>
 
@@ -141,7 +141,7 @@
 
 <div class="viewcode-block" id="get_commands">
 <a class="viewcode-back" href="../../../reference/reference_parsers.html#ete4.parser.nexus.get_commands">[docs]</a>
-<span class="k">def</span> <span class="nf">get_commands</span><span class="p">(</span><span class="n">text_section</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_commands</span><span class="p">(</span><span class="n">text_section</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a dict that for each command has a list with its arguments.&quot;&quot;&quot;</span>
     <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;;.*?(?=;)&#39;</span>
 

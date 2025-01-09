@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ete4.smartview.faces &#8212; ETE Toolkit 4.0.0-beta3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=686e5160" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
     <script src="../../../_static/documentation_options.js?v=9c56ea15"></script>
@@ -45,30 +45,30 @@
 <span class="c1"># Other names that may be better than &quot;face&quot;: glyph, chip, infobox,</span>
 <span class="c1"># ibox, ichip, infochip.</span>
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">base64</span> <span class="kn">import</span> <span class="n">b64encode</span>
-<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
-<span class="kn">import</span> <span class="nn">re</span>  <span class="c1"># so it can be used when evaluating expressions</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">base64</span><span class="w"> </span><span class="kn">import</span> <span class="n">b64encode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">pi</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>  <span class="c1"># so it can be used when evaluating expressions</span>
 
-<span class="kn">from</span> <span class="nn">.coordinates</span> <span class="kn">import</span> <span class="n">Size</span><span class="p">,</span> <span class="n">Box</span><span class="p">,</span> <span class="n">make_box</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">graphics</span> <span class="k">as</span> <span class="n">gr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.coordinates</span><span class="w"> </span><span class="kn">import</span> <span class="n">Size</span><span class="p">,</span> <span class="n">Box</span><span class="p">,</span> <span class="n">make_box</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">graphics</span> <span class="k">as</span> <span class="n">gr</span>
 
 
 <div class="viewcode-block" id="Face">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.Face">[docs]</a>
-<span class="k">class</span> <span class="nc">Face</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Face</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class (mostly an example of the expected interface).&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Face.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.Face.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Save all the parameters that we may want to use.&quot;&quot;&quot;</span>
         <span class="k">pass</span>  <span class="c1"># in this example, we don&#39;t save any</span></div>
 
 
 <div class="viewcode-block" id="Face.draw">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.Face.draw">[docs]</a>
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ax_ay</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ax_ay</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a list of graphic elements and the actual size they use.</span>
 
 <span class="sd">        The retuned graphic elements normally depend on the node(s).</span>
@@ -98,12 +98,12 @@
 
 <div class="viewcode-block" id="EvalTextFace">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.EvalTextFace">[docs]</a>
-<span class="k">class</span> <span class="nc">EvalTextFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EvalTextFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A text that results from evaluating an expression on the node.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="EvalTextFace.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.EvalTextFace.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expression</span><span class="p">,</span> <span class="n">fs_min</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fs_max</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expression</span><span class="p">,</span> <span class="n">fs_min</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fs_max</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="p">(</span><span class="n">expression</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">expression</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">str</span> <span class="k">else</span>
                      <span class="nb">compile</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="s1">&#39;&lt;string&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;eval&#39;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">style</span> <span class="ow">or</span> <span class="p">(</span><span class="s1">&#39;text_&#39;</span> <span class="o">+</span> <span class="n">expression</span><span class="p">)</span>
@@ -114,7 +114,7 @@
 
 <div class="viewcode-block" id="EvalTextFace.draw">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.EvalTextFace.draw">[docs]</a>
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ax_ay</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ax_ay</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="c1"># Get text(s) from applying expression to nodes.</span>
         <span class="k">if</span> <span class="n">collapsed</span><span class="p">:</span>
             <span class="n">texts_dirty</span><span class="p">,</span> <span class="n">all_accounted</span> <span class="o">=</span> <span class="n">make_nodes_summary</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
@@ -150,12 +150,12 @@
 
 <div class="viewcode-block" id="TextFace">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.TextFace">[docs]</a>
-<span class="k">class</span> <span class="nc">TextFace</span><span class="p">(</span><span class="n">EvalTextFace</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TextFace</span><span class="p">(</span><span class="n">EvalTextFace</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A fixed text.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="TextFace.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.TextFace.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">fs_min</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fs_max</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">fs_min</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fs_max</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">expression</span> <span class="o">=</span> <span class="s1">&#39;&quot;&quot;&#39;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span> <span class="k">else</span> <span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\&quot;&#39;</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">fs_min</span><span class="p">,</span> <span class="n">fs_max</span><span class="p">,</span> <span class="n">rotation</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span></div>
 </div>
@@ -164,12 +164,12 @@
 
 <div class="viewcode-block" id="PropFace">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.PropFace">[docs]</a>
-<span class="k">class</span> <span class="nc">PropFace</span><span class="p">(</span><span class="n">EvalTextFace</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PropFace</span><span class="p">(</span><span class="n">EvalTextFace</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A text showing the given property, and optionally a special format.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="PropFace.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.PropFace.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fs_min</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fs_max</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fs_min</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fs_max</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">pexp</span> <span class="o">=</span> <span class="n">prop</span> <span class="k">if</span> <span class="n">prop</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;dist&#39;</span><span class="p">,</span> <span class="s1">&#39;support&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="sa">f</span><span class="s1">&#39;p[&quot;</span><span class="si">{</span><span class="n">prop</span><span class="si">}</span><span class="s1">&quot;]&#39;</span>
         <span class="n">expression</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">fmt</span><span class="si">}</span><span class="s1">&quot; % </span><span class="si">{</span><span class="n">pexp</span><span class="si">}</span><span class="s1"> if &quot;</span><span class="si">{</span><span class="n">prop</span><span class="si">}</span><span class="s1">&quot; in p else &quot;&quot;&#39;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">fs_min</span><span class="p">,</span> <span class="n">fs_max</span><span class="p">,</span> <span class="n">rotation</span><span class="p">,</span> <span class="n">style</span><span class="p">)</span></div>
@@ -179,7 +179,7 @@
 
 <div class="viewcode-block" id="make_nodes_summary">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.make_nodes_summary">[docs]</a>
-<span class="k">def</span> <span class="nf">make_nodes_summary</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_nodes_summary</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return values summarizing the nodes, and if all are accounted for.&quot;&quot;&quot;</span>
     <span class="n">all_accounted</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># did we get the value from all the given nodes?</span>
     <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># will have the (summary of the) values</span>
@@ -200,7 +200,7 @@
 
 <div class="viewcode-block" id="first_value">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.first_value">[docs]</a>
-<span class="k">def</span> <span class="nf">first_value</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">first_value</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return value of evaluating the given code, on the first possible node.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">code</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># special (and common!) case: get the first name</span>
         <span class="k">return</span> <span class="nb">next</span><span class="p">((</span><span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">traverse</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -215,7 +215,7 @@
 
 <div class="viewcode-block" id="texts_size">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.texts_size">[docs]</a>
-<span class="k">def</span> <span class="nf">texts_size</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">size_max</span><span class="p">,</span> <span class="n">fs_max</span><span class="p">,</span> <span class="n">zoom</span><span class="p">,</span> <span class="n">shrink_x</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">texts_size</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">size_max</span><span class="p">,</span> <span class="n">fs_max</span><span class="p">,</span> <span class="n">zoom</span><span class="p">,</span> <span class="n">shrink_x</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the (dx, dy) dimensions of the texts so they fit in size_max.&quot;&quot;&quot;</span>
     <span class="n">zx</span><span class="p">,</span> <span class="n">zy</span> <span class="o">=</span> <span class="n">zoom</span>
     <span class="n">dx_max</span><span class="p">,</span> <span class="n">dy_max</span> <span class="o">=</span> <span class="n">size_max</span>
@@ -245,7 +245,7 @@
 
 <div class="viewcode-block" id="text_repr">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.text_repr">[docs]</a>
-<span class="k">def</span> <span class="nf">text_repr</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">all_have</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">text_repr</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">all_have</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a summarized representation of the given texts.&quot;&quot;&quot;</span>
     <span class="n">texts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">texts</span><span class="p">))</span>  <span class="c1"># remove duplicates</span>
     <span class="k">if</span> <span class="n">all_have</span><span class="p">:</span>  <span class="c1"># texts are all the texts that we want to summarize</span>
@@ -257,7 +257,7 @@
 
 <div class="viewcode-block" id="draw_texts">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.draw_texts">[docs]</a>
-<span class="k">def</span> <span class="nf">draw_texts</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">ax_ay</span><span class="p">,</span> <span class="n">texts</span><span class="p">,</span> <span class="n">fs_max</span><span class="p">,</span> <span class="n">rotation</span><span class="p">,</span> <span class="n">style</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_texts</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">ax_ay</span><span class="p">,</span> <span class="n">texts</span><span class="p">,</span> <span class="n">fs_max</span><span class="p">,</span> <span class="n">rotation</span><span class="p">,</span> <span class="n">style</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield texts so they fit in the box.&quot;&quot;&quot;</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">box</span><span class="o">.</span><span class="n">x</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">box</span><span class="o">.</span><span class="n">y</span>  <span class="c1"># will advance for each text</span>
@@ -272,7 +272,7 @@
 
 <div class="viewcode-block" id="eval_as_str">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.eval_as_str">[docs]</a>
-<span class="k">def</span> <span class="nf">eval_as_str</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">eval_as_str</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the given code evaluated on values related to the given node.&quot;&quot;&quot;</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">safer_eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;node&#39;</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;is_leaf&#39;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">is_leaf</span><span class="p">,</span>
@@ -290,7 +290,7 @@
 
 <div class="viewcode-block" id="safer_eval">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.safer_eval">[docs]</a>
-<span class="k">def</span> <span class="nf">safer_eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">safer_eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a safer version of eval(code, context).&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">code</span><span class="o">.</span><span class="n">co_names</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">context</span><span class="p">:</span>
@@ -301,19 +301,19 @@
 
 <div class="viewcode-block" id="CircleFace">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.CircleFace">[docs]</a>
-<span class="k">class</span> <span class="nc">CircleFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CircleFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A circle.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="CircleFace.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.CircleFace.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rmax</span> <span class="o">=</span> <span class="n">rmax</span>  <span class="c1"># maximum radius in pixels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">style</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span></div>
 
 
 <div class="viewcode-block" id="CircleFace.draw">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.CircleFace.draw">[docs]</a>
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ax_ay</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ax_ay</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">size</span>
         <span class="n">zx</span><span class="p">,</span> <span class="n">zy</span> <span class="o">=</span> <span class="n">zoom</span>
 
@@ -336,12 +336,12 @@
 
 <div class="viewcode-block" id="PolygonFace">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.PolygonFace">[docs]</a>
-<span class="k">class</span> <span class="nc">PolygonFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PolygonFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A polygon.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="PolygonFace.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.PolygonFace.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>  <span class="c1"># name of the shape or number of edges</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">rmax</span> <span class="o">=</span> <span class="n">rmax</span>  <span class="c1"># maximum &quot;radius&quot; in pixels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="n">style</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span></div>
@@ -349,7 +349,7 @@
 
 <div class="viewcode-block" id="PolygonFace.draw">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.PolygonFace.draw">[docs]</a>
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ax_ay</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ax_ay</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">size</span>
         <span class="n">zx</span><span class="p">,</span> <span class="n">zy</span> <span class="o">=</span> <span class="n">zoom</span>
 
@@ -372,13 +372,13 @@
 
 <div class="viewcode-block" id="BoxedFace">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.BoxedFace">[docs]</a>
-<span class="k">class</span> <span class="nc">BoxedFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BoxedFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A shape defined by a box (with optionally a text inside).&quot;&quot;&quot;</span>
     <span class="c1"># Base class for BoxFace and RectFace.</span>
 
 <div class="viewcode-block" id="BoxedFace.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.BoxedFace.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wmax</span> <span class="o">=</span> <span class="n">wmax</span>  <span class="c1"># maximum width in pixels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hmax</span> <span class="o">=</span> <span class="n">hmax</span>  <span class="c1"># maximum height in pixels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">TextFace</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span> <span class="k">else</span> <span class="n">text</span>
@@ -388,7 +388,7 @@
 
 <div class="viewcode-block" id="BoxedFace.draw">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.BoxedFace.draw">[docs]</a>
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ax_ay</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ax_ay</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">r</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">size</span>
         <span class="n">zx</span><span class="p">,</span> <span class="n">zy</span> <span class="o">=</span> <span class="n">zoom</span>
 
@@ -427,12 +427,12 @@
 
 <div class="viewcode-block" id="BoxFace">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.BoxFace">[docs]</a>
-<span class="k">class</span> <span class="nc">BoxFace</span><span class="p">(</span><span class="n">BoxedFace</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BoxFace</span><span class="p">(</span><span class="n">BoxedFace</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A box (with optionally a text inside).&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="BoxFace.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.BoxFace.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">drawing_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">box</span><span class="p">:</span> <span class="n">gr</span><span class="o">.</span><span class="n">draw_box</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">style</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">)</span></div>
 </div>
@@ -441,12 +441,12 @@
 
 <div class="viewcode-block" id="RectFace">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.RectFace">[docs]</a>
-<span class="k">class</span> <span class="nc">RectFace</span><span class="p">(</span><span class="n">BoxedFace</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RectFace</span><span class="p">(</span><span class="n">BoxedFace</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A rectangle (with optionally a text inside).&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="RectFace.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.RectFace.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">drawing_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">box</span><span class="p">:</span> <span class="n">gr</span><span class="o">.</span><span class="n">draw_rect</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">style</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">)</span></div>
 </div>
@@ -455,12 +455,12 @@
 
 <div class="viewcode-block" id="ImageFace">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.ImageFace">[docs]</a>
-<span class="k">class</span> <span class="nc">ImageFace</span><span class="p">(</span><span class="n">BoxedFace</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ImageFace</span><span class="p">(</span><span class="n">BoxedFace</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An image (with optionally a text inside).&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ImageFace.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.ImageFace.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">wmax</span><span class="p">,</span> <span class="n">hmax</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;missing image at </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span>
         <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>  <span class="c1"># extension</span>
@@ -474,12 +474,12 @@
 
 <div class="viewcode-block" id="SeqFace">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.SeqFace">[docs]</a>
-<span class="k">class</span> <span class="nc">SeqFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SeqFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A sequence of nucleotides or amino acids.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="SeqFace.__init__">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.SeqFace.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">seqtype</span><span class="o">=</span><span class="s1">&#39;aa&#39;</span><span class="p">,</span> <span class="n">poswidth</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">draw_text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">seqtype</span><span class="o">=</span><span class="s1">&#39;aa&#39;</span><span class="p">,</span> <span class="n">poswidth</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">draw_text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">hmax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fs_max</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">render</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">)</span>  <span class="c1"># in case it was a list</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seqtype</span> <span class="o">=</span> <span class="n">seqtype</span>
@@ -493,7 +493,7 @@
 
 <div class="viewcode-block" id="SeqFace.draw">
 <a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.SeqFace.draw">[docs]</a>
-    <span class="k">def</span> <span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="p">,</span> <span class="n">ax_ay</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">collapsed</span><span class="p">,</span> <span class="n">zoom</span><span class="p">,</span> <span class="n">ax_ay</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
         <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">size</span>
         <span class="n">zx</span><span class="p">,</span> <span class="n">zy</span> <span class="o">=</span> <span class="n">zoom</span>
 

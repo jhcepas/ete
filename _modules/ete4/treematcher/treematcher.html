@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ete4.treematcher.treematcher &#8212; ETE Toolkit 4.0.0-beta3 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=686e5160" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
     <script src="../../../_static/documentation_options.js?v=9c56ea15"></script>
@@ -40,15 +40,15 @@
 <span class="sd">with expressions and strings.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">permutations</span>
-<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">permutations</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 
-<span class="kn">from</span> <span class="nn">ete4</span> <span class="kn">import</span> <span class="n">Tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tree</span>
 
 
 <div class="viewcode-block" id="TreePattern">
 <a class="viewcode-back" href="../../../reference/reference_treematcher.html#ete4.treematcher.treematcher.TreePattern">[docs]</a>
-<span class="k">class</span> <span class="nc">TreePattern</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TreePattern</span><span class="p">(</span><span class="n">Tree</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A pattern of conditions to be satisfied by a subtree in a tree.</span>
 
 <span class="sd">    It stores in the node names the constraints for that node.</span>
@@ -56,7 +56,7 @@
 
 <div class="viewcode-block" id="TreePattern.__init__">
 <a class="viewcode-back" href="../../../reference/reference_treematcher.html#ete4.treematcher.treematcher.TreePattern.__init__">[docs]</a>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">safer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">children</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">safer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param pattern: Tree pattern to match, as a newick string. Optionally</span>
 <span class="sd">            with conditions on the nodes too (in place of node names).</span>
@@ -83,18 +83,18 @@
             <span class="n">node</span><span class="o">.</span><span class="n">safer</span> <span class="o">=</span> <span class="n">safer</span>  <span class="c1"># will use to know if to use eval or safer_eval</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_str</span><span class="p">(</span><span class="n">show_internal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">props</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
 
 <div class="viewcode-block" id="TreePattern.match">
 <a class="viewcode-back" href="../../../reference/reference_treematcher.html#ete4.treematcher.treematcher.TreePattern.match">[docs]</a>
-    <span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TreePattern.search">
 <a class="viewcode-back" href="../../../reference/reference_treematcher.html#ete4.treematcher.treematcher.TreePattern.search">[docs]</a>
-    <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;levelorder&#39;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;levelorder&#39;</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">strategy</span><span class="p">)</span></div>
 </div>
 
@@ -102,7 +102,7 @@
 
 <div class="viewcode-block" id="match">
 <a class="viewcode-back" href="../../../reference/reference_treematcher.html#ete4.treematcher.treematcher.match">[docs]</a>
-<span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if the pattern matches the given node.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">children</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">children</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pattern</span><span class="o">.</span><span class="n">children</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># no match if there&#39;s not the same number of children</span>
@@ -150,7 +150,7 @@
 
 <div class="viewcode-block" id="search">
 <a class="viewcode-back" href="../../../reference/reference_treematcher.html#ete4.treematcher.treematcher.search">[docs]</a>
-<span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;levelorder&#39;</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">tree</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;levelorder&#39;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield nodes that match the given pattern.&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">traverse</span><span class="p">(</span><span class="n">strategy</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
@@ -162,7 +162,7 @@
 <span class="c1"># web services, we are better off using this following function:</span>
 <div class="viewcode-block" id="safer_eval">
 <a class="viewcode-back" href="../../../reference/reference_treematcher.html#ete4.treematcher.treematcher.safer_eval">[docs]</a>
-<span class="k">def</span> <span class="nf">safer_eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">safer_eval</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a safer version of eval(code, context).&quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">code</span><span class="o">.</span><span class="n">co_names</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">context</span><span class="p">:</span>
