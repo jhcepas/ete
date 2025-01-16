@@ -256,23 +256,23 @@ box, dot, hz-line, vt-line.</p>
 <p>And the “aliases” part will tell the frontend which styles are referenced.</p>
 <p>Example of a tree style in use:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_tree_style</span> <span class="o">=</span> <span class="p">{</span>
-   <span class="s1">&#39;shape&#39;</span><span class="p">:</span> <span class="s1">&#39;circular&#39;</span><span class="p">,</span>  <span class="c1"># or &#39;rectangular&#39;</span>
-   <span class="s1">&#39;radius&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
-   <span class="s1">&#39;angle-start&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
-   <span class="s1">&#39;angle-end&#39;</span><span class="p">:</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># alternatively we can give &#39;angle-span&#39;</span>
-   <span class="s1">&#39;node-height-min&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-   <span class="s1">&#39;content-height-min&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
-   <span class="s1">&#39;collapsed&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;shape&#39;</span><span class="p">:</span> <span class="s1">&#39;outline&#39;</span><span class="p">,</span> <span class="s1">&#39;fill-opacity&#39;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">},</span>
-   <span class="s1">&#39;show-popup-props&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># all defined properties</span>
-   <span class="s1">&#39;hide-popup-props&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;support&#39;</span><span class="p">],</span>  <span class="c1"># except support</span>
-   <span class="s1">&#39;is-leaf-fn&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">level</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">,</span>
-   <span class="s1">&#39;box&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;opacity&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s1">&#39;stroke&#39;</span><span class="p">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">},</span>
-   <span class="s1">&#39;dot&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;shape&#39;</span><span class="p">:</span> <span class="s1">&#39;hexagon&#39;</span><span class="p">,</span> <span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">},</span>
-   <span class="s1">&#39;hz-line&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;stroke-width&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
-   <span class="s1">&#39;vt-line&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;stroke&#39;</span><span class="p">:</span> <span class="s1">&#39;#ffff00&#39;</span><span class="p">},</span>
-   <span class="s1">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">{</span>
-       <span class="s1">&#39;support&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">},</span>  <span class="c1"># changes the default one</span>
-       <span class="s1">&#39;my-leaf&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;font-weight&#39;</span><span class="p">:</span> <span class="s1">&#39;bold&#39;</span><span class="p">},</span>
+    <span class="s1">&#39;shape&#39;</span><span class="p">:</span> <span class="s1">&#39;circular&#39;</span><span class="p">,</span>  <span class="c1"># or &#39;rectangular&#39;</span>
+    <span class="s1">&#39;radius&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s1">&#39;angle-start&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">180</span><span class="p">,</span>
+    <span class="s1">&#39;angle-end&#39;</span><span class="p">:</span> <span class="mi">180</span><span class="p">,</span>  <span class="c1"># alternatively we can give &#39;angle-span&#39;</span>
+    <span class="s1">&#39;node-height-min&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="s1">&#39;content-height-min&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s1">&#39;collapsed&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;shape&#39;</span><span class="p">:</span> <span class="s1">&#39;outline&#39;</span><span class="p">,</span> <span class="s1">&#39;fill-opacity&#39;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">},</span>
+    <span class="s1">&#39;show-popup-props&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># all defined properties</span>
+    <span class="s1">&#39;hide-popup-props&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;support&#39;</span><span class="p">],</span>  <span class="c1"># except support</span>
+    <span class="s1">&#39;is-leaf-fn&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">node</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">level</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="s1">&#39;box&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="s1">&#39;opacity&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s1">&#39;stroke&#39;</span><span class="p">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">},</span>
+    <span class="s1">&#39;dot&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;shape&#39;</span><span class="p">:</span> <span class="s1">&#39;hexagon&#39;</span><span class="p">,</span> <span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;red&#39;</span><span class="p">},</span>
+    <span class="s1">&#39;hz-line&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;stroke-width&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>
+    <span class="s1">&#39;vt-line&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;stroke&#39;</span><span class="p">:</span> <span class="s1">&#39;#ffff00&#39;</span><span class="p">},</span>
+    <span class="s1">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;support&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;green&#39;</span><span class="p">},</span>  <span class="c1"># changes the default one</span>
+        <span class="s1">&#39;my-leaf&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;fill&#39;</span><span class="p">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="s1">&#39;font-weight&#39;</span><span class="p">:</span> <span class="s1">&#39;bold&#39;</span><span class="p">},</span>
     <span class="p">},</span>
 <span class="p">}</span>
 
@@ -423,6 +423,12 @@ from previous layouts.</p>
 different forms. Faces have a drawing function that returns the
 graphic elements that will show the information, and the size they
 occupy (in tree coordinates).</p>
+<p>They know how to represent node(s) information, confined to an area of
+a given size. They do it with a method face.draw(nodes, size, …)
+which returns the graphic elements and the actual size they use
+(which may be smaller than the allocated size).</p>
+<p>The sizes are always given in “tree units”. The size in pixels is
+always that size multiplied by the zoom.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ete4.smartview.faces.BoxFace">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BoxFace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">style</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ete4/smartview/faces.html#BoxFace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ete4.smartview.faces.BoxFace" title="Link to this definition">¶</a></dt>

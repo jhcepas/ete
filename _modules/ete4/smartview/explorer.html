@@ -208,8 +208,9 @@
         <span class="k">for</span> <span class="n">layout</span> <span class="ow">in</span> <span class="n">g_layouts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">[]):</span>
             <span class="k">if</span> <span class="n">layout</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">active</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">layout</span><span class="o">.</span><span class="n">draw_tree</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>  <span class="c1"># a style element</span>
                         <span class="n">update_style</span><span class="p">(</span><span class="n">style</span><span class="p">,</span> <span class="n">element</span><span class="p">)</span>
+        <span class="c1"># Here we care only for the styles. For tree decorations see draw.py</span>
 
         <span class="c1"># Susbstitute aliases for their corresponding styles.</span>
         <span class="n">aliasable_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;box&#39;</span><span class="p">,</span> <span class="s1">&#39;dot&#39;</span><span class="p">,</span> <span class="s1">&#39;hz-line&#39;</span><span class="p">,</span> <span class="s1">&#39;vt-line&#39;</span><span class="p">,</span> <span class="s1">&#39;collapsed&#39;</span><span class="p">}</span>

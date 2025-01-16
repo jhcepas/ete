@@ -40,6 +40,14 @@
 <span class="sd">different forms. Faces have a drawing function that returns the</span>
 <span class="sd">graphic elements that will show the information, and the size they</span>
 <span class="sd">occupy (in tree coordinates).</span>
+
+<span class="sd">They know how to represent node(s) information, confined to an area of</span>
+<span class="sd">a given size. They do it with a method face.draw(nodes, size, ...)</span>
+<span class="sd">which returns the graphic elements and the actual size they use</span>
+<span class="sd">(which may be smaller than the allocated size).</span>
+
+<span class="sd">The sizes are always given in &quot;tree units&quot;. The size in pixels is</span>
+<span class="sd">always that size multiplied by the zoom.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1"># Other names that may be better than &quot;face&quot;: glyph, chip, infobox,</span>
