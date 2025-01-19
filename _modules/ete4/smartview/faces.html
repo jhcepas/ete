@@ -523,6 +523,36 @@
         <span class="k">return</span> <span class="n">graphics</span><span class="p">,</span> <span class="n">size</span></div>
 </div>
 
+
+
+<div class="viewcode-block" id="LegendFace">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.LegendFace">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LegendFace</span><span class="p">(</span><span class="n">Face</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A legend with information about the data we are visualizing.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LegendFace.__init__">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.faces.LegendFace.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span>
+                 <span class="n">colormap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">value_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Do some very basic consistency checks first.</span>
+        <span class="k">if</span> <span class="n">variable</span> <span class="o">==</span> <span class="s1">&#39;discrete&#39;</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">colormap</span> <span class="ow">and</span> <span class="n">value_range</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">color_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> \
+                <span class="s1">&#39;discrete variable needs a colormap (and no more)&#39;</span>
+        <span class="k">elif</span> <span class="n">variable</span> <span class="o">==</span> <span class="s1">&#39;continuous&#39;</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">value_range</span> <span class="ow">and</span> <span class="n">color_range</span> <span class="ow">and</span> <span class="n">colormap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> \
+                <span class="s1">&#39;continuous variable needs value and color ranges (and no more)&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;invalid variable value: </span><span class="si">{</span><span class="n">variable</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">variable</span> <span class="o">=</span> <span class="n">variable</span>  <span class="c1"># can be &quot;discrete&quot; or &quot;continuous&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">colormap</span> <span class="o">=</span> <span class="n">colormap</span>  <span class="c1"># dict {name: color}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value_range</span> <span class="o">=</span> <span class="n">value_range</span>  <span class="c1"># (min, max)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">color_range</span> <span class="o">=</span> <span class="n">color_range</span>  <span class="c1"># (min, max)</span></div>
+</div>
+
+
+    <span class="c1"># NOTE: We don&#39;t need a special draw() function, we use the info directly.</span>
 </pre></div>
 
           </div>
