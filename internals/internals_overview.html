@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Overview &#8212; ETE Toolkit 4.0.0-beta3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=9c56ea15"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Essentials" href="internals_essentials.html" />
+    <link rel="prev" title="Internals" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h1>
+<p>Most of the code is written in python. For efficiency reasons, the
+<code class="docutils literal notranslate"><span class="pre">core.tree</span></code>, <code class="docutils literal notranslate"><span class="pre">core.operations</span></code> and <code class="docutils literal notranslate"><span class="pre">parser.newick</span></code> submodules
+are written in <a class="reference external" href="https://cython.org/">cython</a>, which makes the parser
+about twice as fast while making the final tree take about half the
+memory.</p>
+<p>When exploring trees (“smartview”), there is an http server
+(<code class="docutils literal notranslate"><span class="pre">ete4/smartview/explorer.py</span></code>) that exposes as an api the graphical
+capabilities of ETE and also serves a gui to explore the trees
+interactively by making use of that api.</p>
+<p>The server acts as a <em>backend</em> to the requests made by the <em>frontend</em>,
+which is written in javascript.</p>
+<section id="project-layout">
+<h2>Project Layout<a class="headerlink" href="#project-layout" title="Link to this heading">¶</a></h2>
+<p>The principal files of the project are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ete4</span><span class="o">/</span>  <span class="c1"># the module directory</span>
+  <span class="n">core</span><span class="o">/</span>
+    <span class="n">tree</span><span class="o">.</span><span class="n">pyx</span>  <span class="c1"># the Tree class and related functions</span>
+    <span class="n">operations</span><span class="o">.</span><span class="n">pyx</span>  <span class="c1"># tree-related operations</span>
+  <span class="n">parser</span><span class="o">/</span>
+    <span class="n">newick</span><span class="o">.</span><span class="n">pyx</span>  <span class="c1"># newick parser</span>
+  <span class="n">smartview</span><span class="o">/</span>
+    <span class="n">draw</span><span class="o">.</span><span class="n">py</span>  <span class="c1"># drawing classes and functions to represent a tree</span>
+    <span class="n">explorer</span><span class="o">.</span><span class="n">py</span>  <span class="c1"># http server that exposes an api to interact with trees</span>
+    <span class="n">static</span><span class="o">/</span>
+      <span class="n">gui</span><span class="o">.</span><span class="n">html</span>  <span class="c1"># entry point for the interactive visualization (html)</span>
+      <span class="n">js</span><span class="o">/</span>
+        <span class="n">gui</span><span class="o">.</span><span class="n">js</span>  <span class="c1"># entry point for the interactive visualization (js)</span>
+</pre></div>
+</div>
+<p>For a more detailed view, see the <a class="reference internal" href="internals_detailed_layout.html"><span class="doc">detailed layout</span></a>.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">ETE Toolkit</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">Reference Guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Internals</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals_essentials.html">Essentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals_api.html">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals_detailed_layout.html">Detailed Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals_drawing.html">Drawing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../faqs.html">Frequently Asked Questions</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Internals</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Internals</a></li>
+      <li>Next: <a href="internals_essentials.html" title="next chapter">Essentials</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2008 - 2024, The ETE Toolkit Team.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/internals/internals_overview.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

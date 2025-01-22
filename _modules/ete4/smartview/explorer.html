@@ -64,7 +64,7 @@
 <span class="n">DIR_BIN</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">DIR_BIN</span><span class="p">))</span>  <span class="c1"># so we can import ete w/o install</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">newick</span><span class="p">,</span> <span class="n">nexus</span><span class="p">,</span> <span class="n">operations</span> <span class="k">as</span> <span class="n">ops</span><span class="p">,</span> <span class="n">treematcher</span> <span class="k">as</span> <span class="n">tm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ete4</span><span class="w"> </span><span class="kn">import</span> <span class="n">newick</span><span class="p">,</span> <span class="n">nexus</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">operations</span> <span class="k">as</span> <span class="n">ops</span><span class="p">,</span> <span class="n">treematcher</span> <span class="k">as</span> <span class="n">tm</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">draw</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.layout</span><span class="w"> </span><span class="kn">import</span> <span class="n">Layout</span><span class="p">,</span> <span class="n">BASIC_LAYOUT</span><span class="p">,</span> <span class="n">update_style</span>
 
@@ -100,7 +100,7 @@
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">&lt;!DOCTYPE html&gt;</span>
 <span class="s2">&lt;html&gt;&lt;head&gt;&lt;title&gt;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&lt;/title&gt;</span>
-<span class="s2">&lt;link rel=&quot;icon&quot; type=&quot;image/png&quot; href=&quot;/static/icon.png&quot;&gt;</span>
+<span class="s2">&lt;link rel=&quot;icon&quot; type=&quot;image/png&quot; href=&quot;/static/images/icon.png&quot;&gt;</span>
 <span class="s2">&lt;link rel=&quot;stylesheet&quot; href=&quot;/static/upload.css&quot;&gt;&lt;/head&gt;</span>
 <span class="s2">&lt;body&gt;&lt;div class=&quot;centered&quot;&gt;</span><span class="si">{</span><span class="n">content</span><span class="si">}</span><span class="s2">&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;&quot;&quot;&quot;</span></div>
 
@@ -650,16 +650,16 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">add_trees_from_request</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add trees to the global var g_trees and return a dict of {name: id}.&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">content_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;application/json&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">content_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;application/json&#39;</span><span class="p">):</span>  <span class="c1"># a POST</span>
             <span class="n">trees</span> <span class="o">=</span> <span class="p">[</span><span class="n">req_json</span><span class="p">()]</span>  <span class="c1"># we have only one tree</span>
-            <span class="n">parser</span> <span class="o">=</span> <span class="n">newick</span><span class="o">.</span><span class="n">PARSER_DEFAULT</span>
-        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parser</span> <span class="o">=</span> <span class="s1">&#39;name&#39;</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># the request comes from a form (e.g., from upload.html)</span>
             <span class="n">trees</span> <span class="o">=</span> <span class="n">get_trees_from_form</span><span class="p">()</span>
-            <span class="n">parser</span> <span class="o">=</span> <span class="n">get_parser</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">forms</span><span class="p">[</span><span class="s1">&#39;internal&#39;</span><span class="p">])</span>
+            <span class="n">parser</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">forms</span><span class="p">[</span><span class="s1">&#39;parser&#39;</span><span class="p">]</span>
 
         <span class="n">names</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">trees</span><span class="p">:</span>
-            <span class="n">t</span> <span class="o">=</span> <span class="n">newick</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tree</span><span class="p">[</span><span class="s1">&#39;newick&#39;</span><span class="p">],</span> <span class="n">parser</span><span class="p">)</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">loads</span><span class="p">(</span><span class="n">tree</span><span class="p">[</span><span class="s1">&#39;newick&#39;</span><span class="p">],</span> <span class="n">parser</span><span class="p">)</span>
             <span class="n">ops</span><span class="o">.</span><span class="n">update_sizes_all</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">tree</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>  <span class="c1"># &quot;,&quot; is used for subtrees</span>
             <span class="n">names</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>  <span class="c1"># tree ids are already equal to their names...</span>
@@ -674,12 +674,16 @@
 
 
 
-<div class="viewcode-block" id="get_parser">
-<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.get_parser">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_parser</span><span class="p">(</span><span class="n">internal</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return parser given the internal nodes main property interpretation.&quot;&quot;&quot;</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">newick</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="s1">&#39;support&#39;</span><span class="p">:</span> <span class="n">newick</span><span class="o">.</span><span class="n">SUPPORT</span><span class="p">}[</span><span class="n">internal</span><span class="p">]</span>  <span class="c1"># (()p:d);</span>
-    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">newick</span><span class="o">.</span><span class="n">PARSER_DEFAULT</span><span class="p">,</span> <span class="n">internal</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="n">newick</span><span class="o">.</span><span class="n">DIST</span><span class="p">])</span></div>
+<div class="viewcode-block" id="loads">
+<a class="viewcode-back" href="../../../reference/reference_smartview.html#ete4.smartview.explorer.loads">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">loads</span><span class="p">(</span><span class="n">tree_text</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return tree loaded from the text using the given parser.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">parser</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;support&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">newick</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tree_text</span><span class="p">,</span> <span class="n">parser</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parser</span> <span class="o">==</span> <span class="s1">&#39;nexus&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nexus</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tree_text</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">parser</span> <span class="o">==</span> <span class="s1">&#39;indent&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">indent</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tree_text</span><span class="p">)</span></div>
 
 
 
@@ -892,18 +896,18 @@
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span class="n">fmt</span><span class="p">)</span>
     <span class="n">add</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span>  <span class="c1"># shortcut</span>
-    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;FILE&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;file with the newick tree representation&#39;</span><span class="p">)</span>
-    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;-i&#39;</span><span class="p">,</span> <span class="s1">&#39;--internal&#39;</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;support&#39;</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;support&#39;</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;how to interpret the content of internal nodes&#39;</span><span class="p">)</span>
-    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="s1">&#39;--compress&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;send compressed data&#39;</span><span class="p">)</span>
-    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;-p&#39;</span><span class="p">,</span> <span class="s1">&#39;--port&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;server port number&#39;</span><span class="p">)</span>
+    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;FILE&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;file with the tree representation&#39;</span><span class="p">)</span>
+    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;--parser&#39;</span><span class="p">,</span> <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;support&#39;</span><span class="p">,</span> <span class="s1">&#39;indent&#39;</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;support&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;tree is newick with name/support in internal nodes, or indented&#39;</span><span class="p">)</span>
+    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;--compress&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;send compressed data&#39;</span><span class="p">)</span>
+    <span class="n">add</span><span class="p">(</span><span class="s1">&#39;--port&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;server port number&#39;</span><span class="p">)</span>
     <span class="n">add</span><span class="p">(</span><span class="s1">&#39;-v&#39;</span><span class="p">,</span> <span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;be verbose&#39;</span><span class="p">)</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="c1"># Read tree(s) and add them to g_trees.</span>
         <span class="k">for</span> <span class="n">tree</span> <span class="ow">in</span> <span class="n">get_trees_from_file</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">FILE</span><span class="p">):</span>
-            <span class="n">t</span> <span class="o">=</span> <span class="n">newick</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">tree</span><span class="p">[</span><span class="s1">&#39;newick&#39;</span><span class="p">],</span> <span class="n">get_parser</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">internal</span><span class="p">))</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">loads</span><span class="p">(</span><span class="n">tree</span><span class="p">[</span><span class="s1">&#39;newick&#39;</span><span class="p">],</span> <span class="n">args</span><span class="o">.</span><span class="n">parser</span><span class="p">)</span>
             <span class="n">ops</span><span class="o">.</span><span class="n">update_sizes_all</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">tree</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>  <span class="c1"># &quot;,&quot; is used for subtrees</span>
             <span class="n">g_trees</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
@@ -965,6 +969,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../about.html">About</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../tutorial/index.html">Tutorial</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">Reference Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../internals/index.html">Internals</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../faqs.html">Frequently Asked Questions</a></li>
 </ul>
 

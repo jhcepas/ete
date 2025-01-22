@@ -13,6 +13,7 @@ Welcome to ETE's documentation!
    about
    tutorial/index
    reference/index
+   internals/index
    faqs
 
 
