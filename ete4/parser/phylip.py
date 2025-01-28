@@ -73,7 +73,7 @@ def read_phylip(source, interleaved=True, obj=None,
             else:
                 if len(SG)<ntax:
                     if relaxed:
-                        m = re.match("^([^ ]+)(.+)", line)
+                        m = re.match("^([^ \t]+)(.+)", line)
                     else:
                         m = re.match("^(.{10})(.+)",line)
                     if m:
