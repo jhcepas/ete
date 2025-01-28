@@ -73,10 +73,10 @@ class TestEvolEvolTree(unittest.TestCase):
                          sorted(['fb', 'M1', 'M2', 'M7', 'M8']))
         self.assertEqual(len (tree.get_evol_model('M2').branches), 194)
         self.assertEqual(tree.get_evol_model('fb').lnL, -3265.316569)
-        self.assert_('proportions' in str(tree.get_evol_model('M2')))
-        self.assert_('p2=' in str(tree.get_evol_model('M2')))
-        self.assert_('proportions' not in str(tree.get_evol_model('fb')))
-        self.assert_(' #193' in str(tree.get_evol_model('fb')))
+        self.assertIn('proportions', str(tree.get_evol_model('M2')))
+        self.assertIn('p2=', str(tree.get_evol_model('M2')))
+        self.assertNotIn('proportions', str(tree.get_evol_model('fb')))
+        self.assertIn(' #193', str(tree.get_evol_model('fb')))
 
     def test_get_most_likely(self):
         tree = EvolTree(open(WRKDIR + 'tree.nw'))
@@ -91,7 +91,7 @@ class TestEvolEvolTree(unittest.TestCase):
         tree.workdir = 'protamine/PRM1/paml/'
         random_swap(tree)
         tree.link_to_evol_model (WRKDIR + 'paml/fb/fb.out', 'fb')
-        self.assert_(check_annotation (tree))
+        self.assertTrue(check_annotation (tree))
 
     def test_deep_copy(self):
         tree = EvolTree(open(WRKDIR + 'tree.nw'))
@@ -135,11 +135,11 @@ class TestEvolEvolTree(unittest.TestCase):
             tree = EvolTree('((seq1,seq2),seq3);')
             tree.link_to_alignment('>seq1\nATGCTG\n>seq2\nATGCTG\n>seq3\nTTGATG\n')
             tree.run_model('fb')
-            self.assert_('CODONML' in tree.get_evol_model('fb').run)
-            self.assert_('Time used:' in tree.get_evol_model('fb').run)
-            self.assert_('end of tree file' in tree.get_evol_model('fb').run)
-            self.assert_('lnL' in tree.get_evol_model('fb').run)
-            self.assert_(tree.get_descendants()[0].w > 0)
+            self.assertIn('CODONML', tree.get_evol_model('fb').run)
+            self.assertIn('Time used:', tree.get_evol_model('fb').run)
+            self.assertIn('end of tree file', tree.get_evol_model('fb').run)
+            self.assertIn('lnL', tree.get_evol_model('fb').run)
+            self.assertTrue(tree.get_descendants()[0].w > 0)
 
     def test_run_slr(self):
         if which('Slr'):
@@ -147,10 +147,10 @@ class TestEvolEvolTree(unittest.TestCase):
             tree.link_to_alignment('>seq1\nCTGATTCTT\n>seq2\nCTGATTCTT\n>seq3\nATGATTCTT\n')
             tree.run_model('SLR')
             print(tree.get_evol_model('SLR').run)
-            self.assert_('Sitewise Likelihood R' in tree.get_evol_model('SLR').run)
-            self.assert_('Positively selected s' in tree.get_evol_model('SLR').run)
-            self.assert_('Conserved sites' in tree.get_evol_model('SLR').run)
-            self.assert_('lnL' in tree.get_evol_model('SLR').run)
+            self.assertIn('Sitewise Likelihood R', tree.get_evol_model('SLR').run)
+            self.assertIn('Positively selected s', tree.get_evol_model('SLR').run)
+            self.assertIn('Conserved sites', tree.get_evol_model('SLR').run)
+            self.assertIn('lnL', tree.get_evol_model('SLR').run)
 
     def test_marking_trees(self):
         TREE_PATH = DATAPATH + '/S_example/'
